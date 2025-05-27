@@ -1,0 +1,54 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+Table resource {
+  id uuid [pk]
+  type varchar(128)
+}
+
+
+Table reporter_representation {
+  local_resource_id varchar(256)
+  reporter_type varchar(128)
+  resource_type varchar(128)
+  version integer
+  data jsonb
+  reporter_version varchar
+  reporter_instance_id varchar(256)
+  api_href varchar(256)
+  console_href varchar(256)
+  common_version integer
+  tombstone boolean
+  generation integer
+
+  indexes {
+    (local_resource_id,reporter_type,resource_type,reporter_instance_id,version, generation) [pk]
+  }
+}
+
+Table common_representation {
+  local_resource_id varchar(256)
+  reporter_type varchar(128)
+  resource_type varchar(128)
+  version integer
+  data jsonb
+  indexes {
+    (local_resource_id) [pk]
+  }
+}
+
+Table representation_references {
+
+  resource_id uuid [ref: > resource.id]
+  local_resource_id varchar(256)
+  reporter_type varchar
+  reporter_instance_id varchar
+  representation_version integer
+  generation integer
+
+  indexes {
+    (local_resource_id, reporter_type, reporter_instance_id, representation_version, generation) [unique]
+  }
+}
+
+

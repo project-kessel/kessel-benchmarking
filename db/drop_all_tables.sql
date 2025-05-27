@@ -1,0 +1,1 @@
+DROP TABLE resources, representation_references, reporter_representation, common_representation;
