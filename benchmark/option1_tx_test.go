@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/yourusername/go-db-bench/config"
-	"github.com/yourusername/go-db-bench/db/schemas/denormalized_reference_2_rep_tables/models"
+	"github.com/yourusername/go-db-bench/db/schemas/option1_denormalized_reference_2_rep_tables/models"
 )
 
 type InputRecord struct {
