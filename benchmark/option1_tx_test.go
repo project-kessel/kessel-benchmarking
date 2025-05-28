@@ -69,25 +69,25 @@ func BenchmarkDenormalizedReferences2RepTables(b *testing.B) {
 		b.Fatalf("failed to load input records: %v", err)
 	}
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, rec := range records {
 			err := db.Transaction(func(tx *gorm.DB) error {
 
 				var refs []models.RepresentationReference
 				err := tx.
-					Table("representation_references_option1").
-					Joins("JOIN resources_option1 ON resources_option1.id = representation_references_option1.resource_id").
-					Where("representation_references_option1.local_resource_id = ? AND representation_references_option1.reporter_instance_id = ? AND representation_references_option1.reporter_type = ? AND representation_references_option1.resource_type = ?",
-						rec.LocalResourceID, rec.ReporterInstanceID, rec.ReporterType, rec.ResourceType).
-					Find(&refs).Error
+					Table("representation_references_option1 AS r1").
+					Joins("JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id").
+					Where("r1.local_resource_id = ? AND r1.reporter_type = ? AND r1.resource_type = ? AND r1.reporter_instance_id = ?",
+						rec.LocalResourceID, rec.ReporterType, rec.ResourceType, rec.ReporterInstanceID).
+					Select("r2.*").
+					Scan(&refs).Error
 				if err != nil {
 					return err
 				}
 
-				resourceID := uuid.New()
-
 				if len(refs) == 0 {
 					// Create new resource
+					resourceID := uuid.New()
 					res := models.Resource{
 						ID:   resourceID,
 						Type: rec.ResourceType,
@@ -156,41 +156,38 @@ func BenchmarkDenormalizedReferences2RepTables(b *testing.B) {
 					// Update case: bump version and generation
 					for _, ref := range refs {
 						ref.RepresentationVersion++
-						ref.Generation++
-						if err := tx.Save(&ref).Error; err != nil {
-							return err
+						if ref.ReporterType == "inventory" {
+							if err := tx.Create(&models.CommonRepresentation{
+								BaseRepresentation: models.BaseRepresentation{
+									LocalResourceID: refs[0].ResourceID.String(),
+									ReporterType:    "inventory",
+									ResourceType:    rec.ResourceType,
+									Version:         ref.RepresentationVersion,
+									Data:            datatypes.JSON(rec.Common),
+								},
+							}).Error; err != nil {
+								return err
+							}
+						} else {
+							if err := tx.Create(&models.ReporterRepresentation{
+								BaseRepresentation: models.BaseRepresentation{
+									LocalResourceID: rec.LocalResourceID,
+									ReporterType:    rec.ReporterType,
+									ResourceType:    rec.ResourceType,
+									Version:         ref.RepresentationVersion,
+									Data:            datatypes.JSON(rec.Reporter),
+								},
+								ReporterVersion:    rec.ReporterVersion,
+								ReporterInstanceID: rec.ReporterInstanceID,
+								APIHref:            rec.APIHref,
+								ConsoleHref:        rec.ConsoleHref,
+								CommonVersion:      refs[0].RepresentationVersion,
+								Tombstone:          false,
+								Generation:         ref.Generation,
+							}).Error; err != nil {
+								return err
+							}
 						}
-					}
-
-					if err := tx.Create(&models.CommonRepresentation{
-						BaseRepresentation: models.BaseRepresentation{
-							LocalResourceID: resourceID.String(),
-							ReporterType:    "inventory",
-							ResourceType:    rec.ResourceType,
-							Version:         refs[0].RepresentationVersion,
-							Data:            datatypes.JSON(rec.Common),
-						},
-					}).Error; err != nil {
-						return err
-					}
-
-					if err := tx.Create(&models.ReporterRepresentation{
-						BaseRepresentation: models.BaseRepresentation{
-							LocalResourceID: rec.LocalResourceID,
-							ReporterType:    rec.ReporterType,
-							ResourceType:    rec.ResourceType,
-							Version:         refs[0].RepresentationVersion,
-							Data:            datatypes.JSON(rec.Reporter),
-						},
-						ReporterVersion:    rec.ReporterVersion,
-						ReporterInstanceID: rec.ReporterInstanceID,
-						APIHref:            rec.APIHref,
-						ConsoleHref:        rec.ConsoleHref,
-						CommonVersion:      refs[0].RepresentationVersion,
-						Tombstone:          false,
-						Generation:         refs[0].Generation,
-					}).Error; err != nil {
-						return err
 					}
 				}
 
@@ -202,3 +199,5 @@ func BenchmarkDenormalizedReferences2RepTables(b *testing.B) {
 		}
 	}
 }
+
+// add indexes, unique
