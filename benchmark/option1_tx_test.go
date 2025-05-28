@@ -5,15 +5,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"os"
-	"testing"
-
 	"github.com/google/uuid"
-	"gorm.io/datatypes"
-	"gorm.io/gorm"
-
 	"github.com/yourusername/go-db-bench/config"
 	"github.com/yourusername/go-db-bench/db/schemas/option1_denormalized_reference_2_rep_tables/models"
+	"gorm.io/datatypes"
+	"gorm.io/gorm"
+	"os"
+	"testing"
 )
 
 type InputRecord struct {
@@ -53,6 +51,7 @@ func loadInputRecords(path string) ([]InputRecord, error) {
 }
 
 func BenchmarkDenormalizedReferences2RepTables(b *testing.B) {
+
 	db := config.ConnectDB()
 	_ = db.AutoMigrate(
 		&models.Resource{},
