@@ -175,35 +175,40 @@ func BenchmarkDenormalizedReferences2RepTables(b *testing.B) {
 					for _, ref := range refs {
 						ref.RepresentationVersion++
 						if ref.ReporterType == "inventory" {
-							if err := tx.Create(&models.CommonRepresentation{
-								BaseRepresentation: models.BaseRepresentation{
-									LocalResourceID: refs[0].ResourceID.String(),
-									ReporterType:    "inventory",
-									ResourceType:    rec.ResourceType,
-									Version:         ref.RepresentationVersion,
-									Data:            datatypes.JSON(rec.Common),
-								},
-							}).Error; err != nil {
-								return err
+							if rec.Common != nil {
+								fmt.Println("version for common rep update", ref.RepresentationVersion)
+								if err := tx.Create(&models.CommonRepresentation{
+									BaseRepresentation: models.BaseRepresentation{
+										LocalResourceID: refs[0].ResourceID.String(),
+										ReporterType:    "inventory",
+										ResourceType:    rec.ResourceType,
+										Version:         ref.RepresentationVersion,
+										Data:            datatypes.JSON(rec.Common),
+									},
+								}).Error; err != nil {
+									return err
+								}
 							}
 						} else {
-							if err := tx.Create(&models.ReporterRepresentation{
-								BaseRepresentation: models.BaseRepresentation{
-									LocalResourceID: rec.LocalResourceID,
-									ReporterType:    rec.ReporterType,
-									ResourceType:    rec.ResourceType,
-									Version:         ref.RepresentationVersion,
-									Data:            datatypes.JSON(rec.Reporter),
-								},
-								ReporterVersion:    rec.ReporterVersion,
-								ReporterInstanceID: rec.ReporterInstanceID,
-								APIHref:            rec.APIHref,
-								ConsoleHref:        rec.ConsoleHref,
-								CommonVersion:      refs[0].RepresentationVersion,
-								Tombstone:          false,
-								Generation:         ref.Generation,
-							}).Error; err != nil {
-								return err
+							if rec.Reporter != nil {
+								if err := tx.Create(&models.ReporterRepresentation{
+									BaseRepresentation: models.BaseRepresentation{
+										LocalResourceID: rec.LocalResourceID,
+										ReporterType:    rec.ReporterType,
+										ResourceType:    rec.ResourceType,
+										Version:         ref.RepresentationVersion,
+										Data:            datatypes.JSON(rec.Reporter),
+									},
+									ReporterVersion:    rec.ReporterVersion,
+									ReporterInstanceID: rec.ReporterInstanceID,
+									APIHref:            rec.APIHref,
+									ConsoleHref:        rec.ConsoleHref,
+									CommonVersion:      refs[0].RepresentationVersion,
+									Tombstone:          false,
+									Generation:         ref.Generation,
+								}).Error; err != nil {
+									return err
+								}
 							}
 						}
 					}
