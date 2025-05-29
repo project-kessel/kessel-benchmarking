@@ -1,4 +1,4 @@
-package benchmark_input
+package input_files
 
 import (
 	"encoding/json"

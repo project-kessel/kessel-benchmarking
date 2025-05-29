@@ -1,0 +1,461 @@
+package benchmark
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"github.com/google/uuid"
+	"github.com/yourusername/go-db-bench/db/schemas/option1_denormalized_reference_2_rep_tables/models"
+	"gorm.io/datatypes"
+	"gorm.io/gorm"
+	"os"
+)
+
+func ResetDatabase(db *gorm.DB) error {
+
+	err := ResetSchema(db)
+	if err != nil {
+		return err
+	}
+
+	err = Automigrate(db)
+	if err != nil {
+		return err
+	}
+
+	err = ResetSessionConfig(db)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func ResetSchema(db *gorm.DB) error {
+	// Optional: Drop schema (PostgreSQL syntax)
+	if err := db.Exec("DROP SCHEMA public CASCADE").Error; err != nil {
+		return err
+	}
+	if err := db.Exec("CREATE SCHEMA public").Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Automigrate(db *gorm.DB) error {
+	// Reinitialize extensions if needed (like uuid-ossp or pgcrypto)
+	// db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"")
+
+	// GORM auto-migration to recreate tables
+	err := db.AutoMigrate(
+		&models.Resource{},
+		&models.CommonRepresentation{},
+		&models.ReporterRepresentation{},
+		&models.RepresentationReference{},
+	)
+	return err
+}
+
+func ResetSessionConfig(db *gorm.DB) error {
+	// Optional: reset planner/session settings
+	err := db.Exec(`DISCARD ALL;`).Error
+	if err != nil {
+		return err
+	}
+	err = db.Exec("RESET ALL").Error
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func TruncateAllTables(db *gorm.DB) error {
+	tables := []string{
+		"representation_references",
+		"reporter_representations",
+		"common_representations",
+		"resources",
+	}
+	for _, table := range tables {
+		if err := db.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table)).Error; err != nil {
+			return fmt.Errorf("failed to truncate table %s: %w", table, err)
+		}
+	}
+	return nil
+}
+
+func LoadInputRecords(path string) ([]InputRecord, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+
+		}
+	}(file)
+
+	var records []InputRecord
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		var rec InputRecord
+		if err := json.Unmarshal(scanner.Bytes(), &rec); err != nil {
+			return nil, err
+		}
+		records = append(records, rec)
+	}
+	return records, scanner.Err()
+}
+
+type InputRecord struct {
+	ResourceType       string          `json:"resource_type"`
+	ReporterType       string          `json:"reporter_type"`
+	ReporterInstanceID string          `json:"reporter_instance_id"`
+	LocalResourceID    string          `json:"local_resource_id"`
+	APIHref            string          `json:"api_href"`
+	ConsoleHref        string          `json:"console_href"`
+	ReporterVersion    string          `json:"reporter_version"`
+	Common             json.RawMessage `json:"common"`
+	Reporter           json.RawMessage `json:"reporter"`
+}
+
+func ProcessRecordOption1(tx *gorm.DB, rec InputRecord) error {
+	var refs []models.RepresentationReference
+	err := tx.
+		Table("representation_references_option1 AS r1").
+		Joins("JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id").
+		Where("r1.local_resource_id = ? AND r1.reporter_type = ? AND r1.resource_type = ? AND r1.reporter_instance_id = ?",
+			rec.LocalResourceID, rec.ReporterType, rec.ResourceType, rec.ReporterInstanceID).
+		Select("r2.*").
+		Scan(&refs).Error
+	if err != nil {
+		return err
+	}
+
+	if len(refs) == 0 {
+		// Create new resource
+		resourceID := uuid.New()
+		res := models.Resource{
+			ID:   resourceID,
+			Type: rec.ResourceType,
+		}
+		if err := tx.Create(&res).Error; err != nil {
+			return err
+		}
+
+		// Insert common and reporter representation_references
+		refsToCreate := []models.RepresentationReference{
+			{
+				ResourceID:            resourceID,
+				LocalResourceID:       rec.LocalResourceID,
+				ReporterType:          rec.ReporterType,
+				ReporterInstanceID:    rec.ReporterInstanceID,
+				ResourceType:          rec.ResourceType,
+				RepresentationVersion: 1,
+				Generation:            1,
+				Tombstone:             false,
+			},
+			{
+				ResourceID:            resourceID,
+				LocalResourceID:       resourceID.String(),
+				ReporterType:          "inventory",
+				RepresentationVersion: 1,
+				Generation:            1,
+				Tombstone:             false,
+			},
+		}
+		if err := tx.Create(&refsToCreate).Error; err != nil {
+			return err
+		}
+
+		var commonData datatypes.JSON
+		if rec.Common == nil || len(rec.Common) == 0 {
+			defaultCommon := map[string]string{"workspaceId": "default"}
+			bytes, err := json.Marshal(defaultCommon)
+			if err != nil {
+				return err
+			}
+			commonData = datatypes.JSON(bytes)
+		} else {
+			commonData = datatypes.JSON(rec.Common)
+		}
+
+		// Create representations
+		if err := tx.Create(&models.CommonRepresentation{
+			BaseRepresentation: models.BaseRepresentation{
+				LocalResourceID: resourceID.String(),
+				ReporterType:    "inventory",
+				ResourceType:    rec.ResourceType,
+				Version:         1,
+				Data:            commonData,
+			},
+		}).Error; err != nil {
+			return err
+		}
+
+		var reporterData datatypes.JSON
+		if rec.Reporter == nil || len(rec.Reporter) == 0 {
+			reporterData = datatypes.JSON([]byte(`{}`))
+		} else {
+			reporterData = datatypes.JSON(rec.Reporter)
+		}
+
+		if err := tx.Create(&models.ReporterRepresentation{
+			BaseRepresentation: models.BaseRepresentation{
+				LocalResourceID: rec.LocalResourceID,
+				ReporterType:    rec.ReporterType,
+				ResourceType:    rec.ResourceType,
+				Version:         1,
+				Data:            reporterData,
+			},
+			ReporterVersion:    rec.ReporterVersion,
+			ReporterInstanceID: rec.ReporterInstanceID,
+			APIHref:            rec.APIHref,
+			ConsoleHref:        rec.ConsoleHref,
+			CommonVersion:      1,
+			Tombstone:          false,
+			Generation:         1,
+		}).Error; err != nil {
+			return err
+		}
+	} else {
+		var commonVersion int
+		var reporterVersion int
+
+		for _, ref := range refs {
+			if ref.ReporterType == "inventory" {
+				commonVersion = ref.RepresentationVersion
+			} else if ref.ReporterType == rec.ReporterType {
+				reporterVersion = ref.RepresentationVersion
+			}
+		}
+		// Update case: bump version and generation
+		for _, ref := range refs {
+			ref.RepresentationVersion++
+			if ref.ReporterType == "inventory" {
+				if rec.Common != nil {
+					newCommonVersion := commonVersion + 1
+					if err := tx.Create(&models.CommonRepresentation{
+						BaseRepresentation: models.BaseRepresentation{
+							LocalResourceID: refs[0].ResourceID.String(),
+							ReporterType:    "inventory",
+							ResourceType:    rec.ResourceType,
+							Version:         ref.RepresentationVersion,
+							Data:            datatypes.JSON(rec.Common),
+						},
+					}).Error; err != nil {
+						return err
+					}
+
+					if err := tx.Model(&models.RepresentationReference{}).
+						Where("resource_id = ? AND reporter_type = ?", refs[0].ResourceID, "inventory").
+						Update("representation_version", newCommonVersion).Error; err != nil {
+						return err
+					}
+				}
+			} else {
+				if rec.Reporter != nil {
+					newReporterVersion := reporterVersion + 1
+					if err := tx.Create(&models.ReporterRepresentation{
+						BaseRepresentation: models.BaseRepresentation{
+							LocalResourceID: rec.LocalResourceID,
+							ReporterType:    rec.ReporterType,
+							ResourceType:    rec.ResourceType,
+							Version:         ref.RepresentationVersion,
+							Data:            datatypes.JSON(rec.Reporter),
+						},
+						ReporterVersion:    rec.ReporterVersion,
+						ReporterInstanceID: rec.ReporterInstanceID,
+						APIHref:            rec.APIHref,
+						ConsoleHref:        rec.ConsoleHref,
+						CommonVersion:      refs[0].RepresentationVersion,
+						Tombstone:          false,
+						Generation:         ref.Generation,
+					}).Error; err != nil {
+						return err
+					}
+
+					// Update representation_reference
+					if err := tx.Model(&models.RepresentationReference{}).
+						Where("resource_id = ? AND reporter_type = ? AND local_resource_id = ?", refs[0].ResourceID, rec.ReporterType, rec.LocalResourceID).
+						Update("representation_version", newReporterVersion).Error; err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func ProcessRecordOption3(tx *gorm.DB, rec InputRecord) error {
+	var refs []models.RepresentationReference
+	err := tx.
+		Table("representation_references_option1 AS r1").
+		Joins("JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id").
+		Where("r1.local_resource_id = ? AND r1.reporter_type = ? AND r1.resource_type = ? AND r1.reporter_instance_id = ?",
+			rec.LocalResourceID, rec.ReporterType, rec.ResourceType, rec.ReporterInstanceID).
+		Select("r2.*").
+		Scan(&refs).Error
+	if err != nil {
+		return err
+	}
+
+	if len(refs) == 0 {
+		// Create new resource
+		resourceID := uuid.New()
+		res := models.Resource{
+			ID:   resourceID,
+			Type: rec.ResourceType,
+		}
+		if err := tx.Create(&res).Error; err != nil {
+			return err
+		}
+
+		// Insert common and reporter representation_references
+		refsToCreate := []models.RepresentationReference{
+			{
+				ResourceID:            resourceID,
+				LocalResourceID:       rec.LocalResourceID,
+				ReporterType:          rec.ReporterType,
+				ReporterInstanceID:    rec.ReporterInstanceID,
+				ResourceType:          rec.ResourceType,
+				RepresentationVersion: 1,
+				Generation:            1,
+				Tombstone:             false,
+			},
+			{
+				ResourceID:            resourceID,
+				LocalResourceID:       resourceID.String(),
+				ReporterType:          "inventory",
+				RepresentationVersion: 1,
+				Generation:            1,
+				Tombstone:             false,
+			},
+		}
+		if err := tx.Create(&refsToCreate).Error; err != nil {
+			return err
+		}
+
+		var commonData datatypes.JSON
+		if rec.Common == nil || len(rec.Common) == 0 {
+			defaultCommon := map[string]string{"workspaceId": "default"}
+			bytes, err := json.Marshal(defaultCommon)
+			if err != nil {
+				return err
+			}
+			commonData = datatypes.JSON(bytes)
+		} else {
+			commonData = datatypes.JSON(rec.Common)
+		}
+
+		// Create representations
+		if err := tx.Create(&models.CommonRepresentation{
+			BaseRepresentation: models.BaseRepresentation{
+				LocalResourceID: resourceID.String(),
+				ReporterType:    "inventory",
+				ResourceType:    rec.ResourceType,
+				Version:         1,
+				Data:            commonData,
+			},
+		}).Error; err != nil {
+			return err
+		}
+
+		var reporterData datatypes.JSON
+		if rec.Reporter == nil || len(rec.Reporter) == 0 {
+			reporterData = datatypes.JSON([]byte(`{}`))
+		} else {
+			reporterData = datatypes.JSON(rec.Reporter)
+		}
+
+		if err := tx.Create(&models.ReporterRepresentation{
+			BaseRepresentation: models.BaseRepresentation{
+				LocalResourceID: rec.LocalResourceID,
+				ReporterType:    rec.ReporterType,
+				ResourceType:    rec.ResourceType,
+				Version:         1,
+				Data:            reporterData,
+			},
+			ReporterVersion:    rec.ReporterVersion,
+			ReporterInstanceID: rec.ReporterInstanceID,
+			APIHref:            rec.APIHref,
+			ConsoleHref:        rec.ConsoleHref,
+			CommonVersion:      1,
+			Tombstone:          false,
+			Generation:         1,
+		}).Error; err != nil {
+			return err
+		}
+	} else {
+		var commonVersion int
+		var reporterVersion int
+
+		for _, ref := range refs {
+			if ref.ReporterType == "inventory" {
+				commonVersion = ref.RepresentationVersion
+			} else if ref.ReporterType == rec.ReporterType {
+				reporterVersion = ref.RepresentationVersion
+			}
+		}
+		// Update case: bump version and generation
+		for _, ref := range refs {
+			ref.RepresentationVersion++
+			if ref.ReporterType == "inventory" {
+				if rec.Common != nil {
+					newCommonVersion := commonVersion + 1
+					if err := tx.Create(&models.CommonRepresentation{
+						BaseRepresentation: models.BaseRepresentation{
+							LocalResourceID: refs[0].ResourceID.String(),
+							ReporterType:    "inventory",
+							ResourceType:    rec.ResourceType,
+							Version:         ref.RepresentationVersion,
+							Data:            datatypes.JSON(rec.Common),
+						},
+					}).Error; err != nil {
+						return err
+					}
+
+					if err := tx.Model(&models.RepresentationReference{}).
+						Where("resource_id = ? AND reporter_type = ?", refs[0].ResourceID, "inventory").
+						Update("representation_version", newCommonVersion).Error; err != nil {
+						return err
+					}
+				}
+			} else {
+				if rec.Reporter != nil {
+					newReporterVersion := reporterVersion + 1
+					if err := tx.Create(&models.ReporterRepresentation{
+						BaseRepresentation: models.BaseRepresentation{
+							LocalResourceID: rec.LocalResourceID,
+							ReporterType:    rec.ReporterType,
+							ResourceType:    rec.ResourceType,
+							Version:         ref.RepresentationVersion,
+							Data:            datatypes.JSON(rec.Reporter),
+						},
+						ReporterVersion:    rec.ReporterVersion,
+						ReporterInstanceID: rec.ReporterInstanceID,
+						APIHref:            rec.APIHref,
+						ConsoleHref:        rec.ConsoleHref,
+						CommonVersion:      refs[0].RepresentationVersion,
+						Tombstone:          false,
+						Generation:         ref.Generation,
+					}).Error; err != nil {
+						return err
+					}
+
+					// Update representation_reference
+					if err := tx.Model(&models.RepresentationReference{}).
+						Where("resource_id = ? AND reporter_type = ? AND local_resource_id = ?", refs[0].ResourceID, rec.ReporterType, rec.LocalResourceID).
+						Update("representation_version", newReporterVersion).Error; err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
