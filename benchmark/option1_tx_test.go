@@ -63,7 +63,7 @@ func BenchmarkDenormalizedReferences2RepTables(b *testing.B) {
 	wd, _ := os.Getwd()
 	fmt.Println("Current working directory:", wd)
 
-	records, err := loadInputRecords("benchmark_input/input.jsonl")
+	records, err := loadInputRecords("benchmark_input/input_10_records.jsonl")
 	if err != nil {
 		b.Fatalf("failed to load input records: %v", err)
 	}
@@ -120,6 +120,18 @@ func BenchmarkDenormalizedReferences2RepTables(b *testing.B) {
 						return err
 					}
 
+					var commonData datatypes.JSON
+					if rec.Common == nil || len(rec.Common) == 0 {
+						defaultCommon := map[string]string{"workspaceId": "default"}
+						bytes, err := json.Marshal(defaultCommon)
+						if err != nil {
+							return err
+						}
+						commonData = datatypes.JSON(bytes)
+					} else {
+						commonData = datatypes.JSON(rec.Common)
+					}
+
 					// Create representations
 					if err := tx.Create(&models.CommonRepresentation{
 						BaseRepresentation: models.BaseRepresentation{
@@ -127,10 +139,17 @@ func BenchmarkDenormalizedReferences2RepTables(b *testing.B) {
 							ReporterType:    "inventory",
 							ResourceType:    rec.ResourceType,
 							Version:         1,
-							Data:            datatypes.JSON(rec.Common),
+							Data:            commonData,
 						},
 					}).Error; err != nil {
 						return err
+					}
+
+					var reporterData datatypes.JSON
+					if rec.Reporter == nil || len(rec.Reporter) == 0 {
+						reporterData = datatypes.JSON([]byte(`{}`))
+					} else {
+						reporterData = datatypes.JSON(rec.Reporter)
 					}
 
 					if err := tx.Create(&models.ReporterRepresentation{
@@ -139,7 +158,7 @@ func BenchmarkDenormalizedReferences2RepTables(b *testing.B) {
 							ReporterType:    rec.ReporterType,
 							ResourceType:    rec.ResourceType,
 							Version:         1,
-							Data:            datatypes.JSON(rec.Reporter),
+							Data:            reporterData,
 						},
 						ReporterVersion:    rec.ReporterVersion,
 						ReporterInstanceID: rec.ReporterInstanceID,

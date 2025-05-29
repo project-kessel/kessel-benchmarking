@@ -1,0 +1,4 @@
+{"resource_type":"host","reporter_type":"hbi","reporter_instance_id":"abc","local_resource_id":"1","api_href":"www.example.com","console_href":"www.example.com","reporter_version":"123.2","reporter":{"insightsId":"czFotc"}}
+{"resource_type":"host","reporter_type":"hbi","reporter_instance_id":"abc","local_resource_id":"1","api_href":"www.example.com","console_href":"www.example.com","reporter_version":"123.2","common":{"workspaceId":"NNR95l"},"reporter":{"insightsId":"dt8Lwi"}}
+{"resource_type":"host","reporter_type":"hbi","reporter_instance_id":"abc","local_resource_id":"1","api_href":"www.example.com","console_href":"www.example.com","reporter_version":"123.2","reporter":{"insightsId":"PKI3Mb"}}
+{"resource_type":"host","reporter_type":"hbi","reporter_instance_id":"abc","local_resource_id":"1","api_href":"www.example.com","console_href":"www.example.com","reporter_version":"123.2","common":{"workspaceId":"f3EiiT"}}
