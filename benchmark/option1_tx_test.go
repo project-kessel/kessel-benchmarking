@@ -63,7 +63,7 @@ func BenchmarkDenormalizedReferences2RepTables(b *testing.B) {
 	wd, _ := os.Getwd()
 	fmt.Println("Current working directory:", wd)
 
-	records, err := loadInputRecords("benchmark_input/input_10_records.jsonl")
+	records, err := loadInputRecords("benchmark_input/input_100_records.jsonl")
 	if err != nil {
 		b.Fatalf("failed to load input records: %v", err)
 	}
@@ -171,11 +171,22 @@ func BenchmarkDenormalizedReferences2RepTables(b *testing.B) {
 						return err
 					}
 				} else {
+					var commonVersion int
+					var reporterVersion int
+
+					for _, ref := range refs {
+						if ref.ReporterType == "inventory" {
+							commonVersion = ref.RepresentationVersion
+						} else if ref.ReporterType == rec.ReporterType {
+							reporterVersion = ref.RepresentationVersion
+						}
+					}
 					// Update case: bump version and generation
 					for _, ref := range refs {
 						ref.RepresentationVersion++
 						if ref.ReporterType == "inventory" {
 							if rec.Common != nil {
+								newCommonVersion := commonVersion + 1
 								fmt.Println("version for common rep update", ref.RepresentationVersion)
 								if err := tx.Create(&models.CommonRepresentation{
 									BaseRepresentation: models.BaseRepresentation{
@@ -188,9 +199,16 @@ func BenchmarkDenormalizedReferences2RepTables(b *testing.B) {
 								}).Error; err != nil {
 									return err
 								}
+
+								if err := tx.Model(&models.RepresentationReference{}).
+									Where("resource_id = ? AND reporter_type = ?", refs[0].ResourceID, "inventory").
+									Update("representation_version", newCommonVersion).Error; err != nil {
+									return err
+								}
 							}
 						} else {
 							if rec.Reporter != nil {
+								newReporterVersion := reporterVersion + 1
 								if err := tx.Create(&models.ReporterRepresentation{
 									BaseRepresentation: models.BaseRepresentation{
 										LocalResourceID: rec.LocalResourceID,
@@ -207,6 +225,13 @@ func BenchmarkDenormalizedReferences2RepTables(b *testing.B) {
 									Tombstone:          false,
 									Generation:         ref.Generation,
 								}).Error; err != nil {
+									return err
+								}
+
+								// Update representation_reference
+								if err := tx.Model(&models.RepresentationReference{}).
+									Where("resource_id = ? AND reporter_type = ? AND local_resource_id = ?", refs[0].ResourceID, rec.ReporterType, rec.LocalResourceID).
+									Update("representation_version", newReporterVersion).Error; err != nil {
 									return err
 								}
 							}

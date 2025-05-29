@@ -29,15 +29,15 @@ type Record struct {
 
 func Categorize(idNum uint64) string {
 	switch {
-	case idNum < 3:
+	case idNum < 30:
 		return "cat1"
-	case idNum < 6:
+	case idNum < 60:
 		return "cat2"
-	case idNum < 7:
+	case idNum < 70:
 		return "cat3"
-	case idNum < 8:
+	case idNum < 80:
 		return "cat4"
-	case idNum < 9:
+	case idNum < 90:
 		return "cat5"
 	default:
 		return "cat6"
