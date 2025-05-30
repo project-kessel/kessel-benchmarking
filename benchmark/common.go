@@ -2,6 +2,7 @@ package benchmark
 
 import (
 	"bufio"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
@@ -9,6 +10,7 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"os"
+	"time"
 )
 
 func ResetDatabase(db *gorm.DB) error {
@@ -18,12 +20,17 @@ func ResetDatabase(db *gorm.DB) error {
 		return err
 	}
 
-	err = Automigrate(db)
+	err = ResetSessionConfig(db)
 	if err != nil {
 		return err
 	}
 
-	err = ResetSessionConfig(db)
+	err = ConfirmNoTables(db)
+	if err != nil {
+		return err
+	}
+
+	err = Automigrate(db)
 	if err != nil {
 		return err
 	}
@@ -35,9 +42,11 @@ func ResetSchema(db *gorm.DB) error {
 	if err := db.Exec("DROP SCHEMA public CASCADE").Error; err != nil {
 		return err
 	}
+
 	if err := db.Exec("CREATE SCHEMA public").Error; err != nil {
 		return err
 	}
+	fmt.Println("✅ Dropped and recreated public schema")
 
 	return nil
 }
@@ -62,27 +71,67 @@ func ResetSessionConfig(db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("✅ DISCARD ALL executed")
 	err = db.Exec("RESET ALL").Error
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("✅ RESET ALL executed")
 	return err
 }
 
-func TruncateAllTables(db *gorm.DB) error {
-	tables := []string{
-		"representation_references",
-		"reporter_representations",
-		"common_representations",
-		"resources",
+func ConfirmNoTables(db *gorm.DB) error {
+	// Confirm clean
+	var tables []string
+	if err := db.Raw(`SELECT tablename FROM pg_tables WHERE schemaname = 'public'`).Scan(&tables).Error; err != nil {
+		return fmt.Errorf("failed to query tables: %w", err)
 	}
-	for _, table := range tables {
-		if err := db.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table)).Error; err != nil {
-			return fmt.Errorf("failed to truncate table %s: %w", table, err)
-		}
+	if len(tables) > 0 {
+		return fmt.Errorf("❌ tables still exist after reset: %v", tables)
 	}
+	fmt.Println("✅ Verified: no user-defined tables remain")
+
 	return nil
 }
+
+func WriteCSV(total time.Duration, p50, p90, p99, max time.Duration, count int) {
+	mode := os.O_APPEND | os.O_CREATE | os.O_WRONLY
+	if startFreshCSVFile {
+		mode = os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+	}
+
+	f, err := os.OpenFile(outputCSVPath, mode, 0644)
+	if err != nil {
+		fmt.Printf("❌ Failed to write CSV: %v\n", err)
+		return
+	}
+	defer f.Close()
+
+	writer := csv.NewWriter(f)
+	defer writer.Flush()
+
+	if startFreshCSVFile {
+		_ = writer.Write([]string{"Timestamp", "Records", "TotalTime", "p50", "p90", "p99", "Max"})
+	}
+
+	record := []string{
+		time.Now().Format("2006-01-02 15:04:05"),
+		fmt.Sprintf("%d", count),
+		total.String(),
+		p50.String(),
+		p90.String(),
+		p99.String(),
+		max.String(),
+	}
+
+	_ = writer.Write(record)
+}
+
+const (
+	outputCSVPath     = "benchmark_results.csv" // Change if needed
+	startFreshCSVFile = false                   // Set to true to overwrite
+)
 
 func LoadInputRecords(path string) ([]InputRecord, error) {
 	file, err := os.Open(path)
