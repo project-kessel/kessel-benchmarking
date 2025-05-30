@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/yourusername/go-db-bench/benchmark"
 	"github.com/yourusername/go-db-bench/config"
+	"github.com/yourusername/go-db-bench/db/schemas/option3_normalized_reference_2_rep_tables/models"
 	"gorm.io/gorm"
 	"runtime"
 	"testing"
@@ -13,9 +14,23 @@ import (
 
 func TestNormalizedRefs2RepTables(t *testing.T) {
 
+	cfg := config.LoadDBConfig() // ⬅️ Load config once
+	// ⬇️ Drop and recreate DB before each run
+	if err := config.DropAndRecreateDatabase(cfg); err != nil {
+		t.Fatalf("❌ failed to reset DB: %v", err)
+	}
+
+	// ⬇️ Reconnect to the freshly created DB
 	db := config.ConnectDB()
-	if err := benchmark.ResetDatabase(db); err != nil {
-		t.Fatalf("failed to reset DB: %v", err)
+	// GORM auto-migration to recreate tables
+	err := db.AutoMigrate(
+		&models.Resource{},
+		&models.CommonRepresentation{},
+		&models.ReporterRepresentation{},
+		&models.RepresentationReference{},
+	)
+	if err != nil {
+		return
 	}
 	records, err := benchmark.LoadInputRecords("input_files/input_10000_records.jsonl")
 	if err != nil {

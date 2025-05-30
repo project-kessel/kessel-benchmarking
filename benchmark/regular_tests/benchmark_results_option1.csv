@@ -1,0 +1,78 @@
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 13:38:01,14.502398708s,1.37483725s,2.526008167s,2.526008167s,2.526008167s,10,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)",
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 13:45:00,1.316241417s,155.013042ms,258.965583ms,258.965583ms,258.965583ms,10,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)",
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 13:46:14,860.899458ms,61.37125ms,192.387833ms,192.387833ms,192.387833ms,10,insert_reporter_rep,"INSERT INTO ""reporter_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reporter_version"",""reporter_instance_id"",""api_href"",""console_href"",""common_version"",""tombstone"",""generation"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 13:47:43,2.114431792s,241.655542ms,318.912167ms,318.912167ms,318.912167ms,10,insert_reporter_rep,"INSERT INTO ""reporter_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reporter_version"",""reporter_instance_id"",""api_href"",""console_href"",""common_version"",""tombstone"",""generation"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 13:52:17,2.611716792s,241.578167ms,927.552875ms,927.552875ms,927.552875ms,10,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)",
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 13:59:11,154.450458ms,6.291208ms,44.391208ms,44.391208ms,44.391208ms,10,,,
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 14:03:09,5.806316708s,406.205084ms,2.608628583s,2.608628583s,2.608628583s,10,insert_common_rep,"INSERT INTO ""common_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reported_by"") VALUES ($1,$2,$3,$4,$5,$6)",
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 14:09:16,4.373809375s,369.839875ms,813.2035ms,813.2035ms,813.2035ms,10,,,
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 14:12:56,7.607526458s,675.490625ms,2.073738291s,2.073738291s,2.073738291s,10,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)",
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 14:14:10,1.553119334s,162.507042ms,382.06875ms,382.06875ms,382.06875ms,10,,,
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 14:19:57,31.727011166s,1.230192375s,16.448198292s,16.448198292s,16.448198292s,10,select_refs_join,,
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 14:26:02,60.087791ms,4.523292ms,24.618833ms,24.618833ms,24.618833ms,10,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)",
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 14:26:40,1.529048292s,107.581667ms,345.547833ms,345.547833ms,345.547833ms,10,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)",
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 14:28:35,2.152489583s,173.599834ms,655.671791ms,655.671791ms,655.671791ms,10,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161) (actual time=2.084..2.085 rows=0 loops=1)
+  Buffers: shared hit=1
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16) (actual time=2.082..2.082 rows=0 loops=1)
+        Recheck Cond: (local_resource_id = '9'::text)
+        Filter: ((reporter_type = 'acm'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        Buffers: shared hit=1
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0) (actual time=2.080..2.080 rows=0 loops=1)
+              Index Cond: (local_resource_id = '9'::text)
+              Buffers: shared hit=1
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161) (never executed)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0) (never executed)
+              Index Cond: (resource_id = r1.resource_id)
+Planning Time: 9.931 ms
+Execution Time: 11.367 ms"
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 14:36:48,2.146173166s,221.185709ms,335.820834ms,335.820834ms,335.820834ms,10,,,
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 14:39:14,2.228931875s,161.477416ms,962.366541ms,962.366541ms,962.366541ms,10,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161) (actual time=0.028..0.029 rows=0 loops=1)
+  Buffers: shared hit=1
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16) (actual time=0.028..0.028 rows=0 loops=1)
+        Recheck Cond: (local_resource_id = '9'::text)
+        Filter: ((reporter_type = 'acm'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        Buffers: shared hit=1
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0) (actual time=0.026..0.026 rows=0 loops=1)
+              Index Cond: (local_resource_id = '9'::text)
+              Buffers: shared hit=1
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161) (never executed)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0) (never executed)
+              Index Cond: (resource_id = r1.resource_id)
+Planning Time: 1.437 ms
+Execution Time: 0.072 ms"
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 14:48:42,1.361306375s,80.838625ms,508.103ms,508.103ms,508.103ms,10,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","❌ failed to get explain: ERROR: duplicate key value violates unique constraint ""resources_option1_pkey"" (SQLSTATE 23505)"
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,ExplainPlan
+2025-05-30 14:59:34,4.114722959s,153.921125ms,2.911455334s,2.911455334s,2.911455334s,10,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161) (actual time=1.767..1.768 rows=0 loops=1)
+  Buffers: shared hit=1
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16) (actual time=1.765..1.765 rows=0 loops=1)
+        Recheck Cond: (local_resource_id = '9'::text)
+        Filter: ((reporter_type = 'acm'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        Buffers: shared hit=1
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0) (actual time=1.762..1.762 rows=0 loops=1)
+              Index Cond: (local_resource_id = '9'::text)
+              Buffers: shared hit=1
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161) (never executed)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0) (never executed)
+              Index Cond: (resource_id = r1.resource_id)
+Planning Time: 6.646 ms
+Execution Time: 3.699 ms"

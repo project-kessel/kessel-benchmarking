@@ -13,7 +13,7 @@ import (
 func BenchmarkDenormalizedReferences2RepTables(b *testing.B) {
 
 	db := config.ConnectDB()
-	if err := benchmark.ResetDatabase(db); err != nil {
+	if err := config.ResetDatabase(db); err != nil {
 		b.Fatalf("failed to reset DB: %v", err)
 	}
 
