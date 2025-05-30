@@ -95,7 +95,7 @@ func ConfirmNoTables(db *gorm.DB) error {
 	return nil
 }
 
-func WriteCSV(total time.Duration, p50, p90, p99, max time.Duration, count int) {
+func WriteCSV(total time.Duration, p50, p90, p99, max time.Duration, count int, outputCSVPath string, startFreshCSVFile bool) {
 	mode := os.O_APPEND | os.O_CREATE | os.O_WRONLY
 	if startFreshCSVFile {
 		mode = os.O_CREATE | os.O_WRONLY | os.O_TRUNC
@@ -127,11 +127,6 @@ func WriteCSV(total time.Duration, p50, p90, p99, max time.Duration, count int) 
 
 	_ = writer.Write(record)
 }
-
-const (
-	outputCSVPath     = "benchmark_results.csv" // Change if needed
-	startFreshCSVFile = false                   // Set to true to overwrite
-)
 
 func LoadInputRecords(path string) ([]InputRecord, error) {
 	file, err := os.Open(path)

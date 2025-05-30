@@ -2,7 +2,6 @@ package regular_tests
 
 import (
 	"database/sql"
-	"flag"
 	"fmt"
 	"github.com/yourusername/go-db-bench/benchmark"
 	"github.com/yourusername/go-db-bench/config"
@@ -12,16 +11,19 @@ import (
 	"time"
 )
 
-var runCount = 1
+var runCount = 5
+
+const (
+	outputCSVPath = "benchmark_results.csv" // Change if needed
+)
 
 func TestDenormalizedRefs2RepTables(t *testing.T) {
-	// Parse flags inside the test
-	if !flag.Parsed() {
-		flag.IntVar(&runCount, "runCount", 1, "Number of times to run the test")
-		flag.Parse()
-	}
+	startFreshCSVFile := true
 
 	for run := 1; run <= runCount; run++ {
+		if run > 1 {
+			startFreshCSVFile = false
+		}
 		fmt.Printf("\n🔁 Starting run %d/%d\n", run, runCount)
 
 		db := config.ConnectDB()
@@ -75,6 +77,6 @@ func TestDenormalizedRefs2RepTables(t *testing.T) {
 		fmt.Printf("  - p99: %s\n", p99)
 		fmt.Printf("  - maxTime: %s\n", maxTime)
 
-		benchmark.WriteCSV(totalElapsed, p50, p90, p99, maxTime, len(records))
+		benchmark.WriteCSV(totalElapsed, p50, p90, p99, maxTime, len(records), outputCSVPath, startFreshCSVFile)
 	}
 }
