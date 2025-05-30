@@ -152,7 +152,7 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTimin
 		dry := tx.Session(&gorm.Session{DryRun: true}).Create(&res)
 		vars = dry.Statement.Vars
 		sql = dry.Statement.SQL.String()
-		fmt.Printf("  vars: %s\n", vars)
+		fmt.Printf("  vars: %s\n", len(vars))
 		fmt.Printf("  sql: %s\n", sql)
 		err = tx.Create(&res).Error
 		timings = append(timings, StepTiming{
@@ -176,6 +176,8 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTimin
 		dry = tx.Session(&gorm.Session{DryRun: true}).Create(&refsToCreate)
 		sql = dry.Statement.SQL.String()
 		vars = dry.Statement.Vars
+		fmt.Printf("  vars: %s\n", len(vars))
+		fmt.Printf("  sql: %s\n", sql)
 		err = tx.Create(&refsToCreate).Error
 		timings = append(timings, StepTiming{
 			Label:    "insert_refs",
@@ -206,6 +208,8 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTimin
 		dry = tx.Session(&gorm.Session{DryRun: true}).Create(commonRep)
 		sql = dry.Statement.SQL.String()
 		vars = dry.Statement.Vars
+		fmt.Printf("  vars: %s\n", len(vars))
+		fmt.Printf("  sql: %s\n", sql)
 		err = tx.Create(commonRep).Error
 		timings = append(timings, StepTiming{
 			Label:    "insert_common_rep",
@@ -237,6 +241,8 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTimin
 		dry = tx.Session(&gorm.Session{DryRun: true}).Create(reporterRep)
 		sql = dry.Statement.SQL.String()
 		vars = dry.Statement.Vars
+		fmt.Printf("  vars: %s\n", len(vars))
+		fmt.Printf("  sql: %s\n", sql)
 		err = tx.Create(reporterRep).Error
 		timings = append(timings, StepTiming{
 			Label:    "insert_reporter_rep",

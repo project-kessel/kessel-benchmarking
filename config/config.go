@@ -61,13 +61,25 @@ func DropAndRecreateDatabase(cfg DBConfig) error {
 		return fmt.Errorf("failed to drop database: %w", err)
 	}
 
+	log.Printf("✅ Dropped database %s\n", cfg.DBName)
+	row := adminDB.QueryRow("SELECT 1 FROM pg_database WHERE datname = $1", cfg.DBName)
+	var exists int
+	err = row.Scan(&exists)
+	if err == sql.ErrNoRows {
+		fmt.Println("✅ Database successfully deleted")
+	} else if err != nil {
+		log.Fatalf("error checking database: %v", err)
+	} else {
+		fmt.Println("❌ Database still exists")
+	}
+
 	// Recreate the database
 	_, err = adminDB.Exec(`CREATE DATABASE ` + quotedDBName)
 	if err != nil {
 		return fmt.Errorf("failed to create database: %w", err)
 	}
 
-	log.Printf("✅ Dropped and recreated database %s\n", cfg.DBName)
+	log.Printf("✅ Recreated database %s\n", cfg.DBName)
 	return nil
 }
 

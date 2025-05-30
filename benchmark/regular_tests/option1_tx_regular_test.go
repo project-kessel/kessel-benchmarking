@@ -16,9 +16,9 @@ import (
 	"gorm.io/gorm"
 )
 
-var runCount = 1
+var runCount = 100
 
-const outputCSVPath = "benchmark_results_option1.csv"
+const outputCSVPath = "benchmark_results_option1_10_records.csv"
 
 func TestDenormalizedRefs2RepTables(t *testing.T) {
 	startFreshCSVFile := true
@@ -97,9 +97,9 @@ func TestDenormalizedRefs2RepTables(t *testing.T) {
 		}
 
 		if maxStep.SQL != "" {
+			fmt.Printf("  - maxStep Vars:%s\n", maxStep.Vars)
 			explainSQL := fmt.Sprintf("EXPLAIN (ANALYZE, BUFFERS) %s", maxStep.SQL)
-			fmt.Printf("  explainSQL: %s\n", explainSQL)
-			rows, err := db.Raw(explainSQL).Rows()
+			rows, err := db.Raw(explainSQL, maxStep.Vars...).Rows()
 			if err == nil {
 				var lines []string
 				for rows.Next() {
@@ -161,7 +161,7 @@ func WriteCSVWithExplain(total time.Duration, p50, p90, p99, max time.Duration, 
 	defer writer.Flush()
 
 	if writeHeaders {
-		writer.Write([]string{"Timestamp", "TotalTime", "P50", "P90", "P99", "MaxTime", "RecordCount", "MaxStepLabel", "MaxStepSQL", "ExplainPlan"})
+		writer.Write([]string{"Timestamp", "TotalTime", "P50", "P90", "P99", "MaxTime", "RecordCount", "MaxStepLabel", "MaxStepSQL", "MaxStepExplainPlan"})
 	}
 
 	record := []string{
