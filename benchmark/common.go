@@ -92,7 +92,8 @@ type StepTiming struct {
 }
 
 func GetExplainPlan(tx *gorm.DB, sql string, vars []interface{}) string {
-	explainSQL := "EXPLAIN (ANALYZE, BUFFERS) " + sql
+	//explainSQL := "EXPLAIN (ANALYZE, BUFFERS) " + sql
+	explainSQL := "EXPLAIN " + sql
 	rows, err := tx.Raw(explainSQL, vars...).Rows()
 	if err != nil {
 		return fmt.Sprintf("❌ failed to get explain: %v", err)
@@ -106,13 +107,14 @@ func GetExplainPlan(tx *gorm.DB, sql string, vars []interface{}) string {
 			output = append(output, line)
 		}
 	}
-	return strings.Join(output, "\n")
+	explainPlan := strings.Join(output, "\n")
+	//fmt.Printf("Explain plan calculated: %s\n", explainPlan)
+	return explainPlan
 }
 
 func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTiming, error) {
 	timings := []StepTiming{}
 
-	t0 := time.Now()
 	query := tx.Session(&gorm.Session{DryRun: true}).Table("representation_references_option1 AS r1").
 		Joins("JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id").
 		Where("r1.local_resource_id = ? AND r1.reporter_type = ? AND r1.resource_type = ? AND r1.reporter_instance_id = ?",
@@ -124,6 +126,7 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTimin
 	vars := query.Statement.Vars
 
 	var refs []models.RepresentationReference
+	t0 := time.Now()
 	err := tx.Table("representation_references_option1 AS r1").
 		Joins("JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id").
 		Where("r1.local_resource_id = ? AND r1.reporter_type = ? AND r1.resource_type = ? AND r1.reporter_instance_id = ?",
@@ -143,7 +146,7 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTimin
 	}
 
 	if len(refs) == 0 {
-		t0 = time.Now()
+
 		resourceID := uuid.New()
 		res := models.Resource{
 			ID:   resourceID,
@@ -152,14 +155,16 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTimin
 		dry := tx.Session(&gorm.Session{DryRun: true}).Create(&res)
 		vars = dry.Statement.Vars
 		sql = dry.Statement.SQL.String()
-		fmt.Printf("  vars: %s\n", len(vars))
-		fmt.Printf("  sql: %s\n", sql)
+		//fmt.Printf("  vars: %s\n", len(vars))
+		//fmt.Printf("  sql: %s\n", sql)
+		t0 = time.Now()
 		err = tx.Create(&res).Error
 		timings = append(timings, StepTiming{
 			Label:    "insert_resource",
 			SQL:      sql,
 			Duration: time.Since(t0),
 			Vars:     vars,
+			Explain:  GetExplainPlan(tx, sql, vars),
 		})
 		if err != nil {
 			return timings, err
@@ -172,18 +177,20 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTimin
 			{ResourceID: resourceID, LocalResourceID: resourceID.String(), ReporterType: "inventory",
 				RepresentationVersion: 1, Generation: 1, Tombstone: false},
 		}
-		t0 = time.Now()
+
 		dry = tx.Session(&gorm.Session{DryRun: true}).Create(&refsToCreate)
 		sql = dry.Statement.SQL.String()
 		vars = dry.Statement.Vars
-		fmt.Printf("  vars: %s\n", len(vars))
-		fmt.Printf("  sql: %s\n", sql)
+		//fmt.Printf("  vars: %s\n", len(vars))
+		//fmt.Printf("  sql: %s\n", sql)
+		t0 = time.Now()
 		err = tx.Create(&refsToCreate).Error
 		timings = append(timings, StepTiming{
 			Label:    "insert_refs",
 			SQL:      sql,
 			Duration: time.Since(t0),
 			Vars:     vars,
+			Explain:  GetExplainPlan(tx, sql, vars),
 		})
 		if err != nil {
 			return timings, err
@@ -204,18 +211,20 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTimin
 				ResourceType: rec.ResourceType, Version: 1, Data: commonData,
 			},
 		}
-		t0 = time.Now()
+
 		dry = tx.Session(&gorm.Session{DryRun: true}).Create(commonRep)
 		sql = dry.Statement.SQL.String()
 		vars = dry.Statement.Vars
-		fmt.Printf("  vars: %s\n", len(vars))
-		fmt.Printf("  sql: %s\n", sql)
+		//fmt.Printf("  vars: %s\n", len(vars))
+		//fmt.Printf("  sql: %s\n", sql)
+		t0 = time.Now()
 		err = tx.Create(commonRep).Error
 		timings = append(timings, StepTiming{
 			Label:    "insert_common_rep",
 			SQL:      sql,
 			Duration: time.Since(t0),
 			Vars:     vars,
+			Explain:  GetExplainPlan(tx, sql, vars),
 		})
 		if err != nil {
 			return timings, err
@@ -223,7 +232,7 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTimin
 
 		var reporterData datatypes.JSON
 		if rec.Reporter == nil || len(rec.Reporter) == 0 {
-			reporterData = datatypes.JSON([]byte(`{}`))
+			reporterData = []byte(`{}`)
 		} else {
 			reporterData = datatypes.JSON(rec.Reporter)
 		}
@@ -241,17 +250,144 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTimin
 		dry = tx.Session(&gorm.Session{DryRun: true}).Create(reporterRep)
 		sql = dry.Statement.SQL.String()
 		vars = dry.Statement.Vars
-		fmt.Printf("  vars: %s\n", len(vars))
-		fmt.Printf("  sql: %s\n", sql)
+		//fmt.Printf("  vars: %s\n", len(vars))
+		//fmt.Printf("  sql: %s\n", sql)
 		err = tx.Create(reporterRep).Error
 		timings = append(timings, StepTiming{
 			Label:    "insert_reporter_rep",
 			SQL:      sql,
 			Duration: time.Since(t0),
 			Vars:     vars,
+			Explain:  GetExplainPlan(tx, sql, vars),
 		})
 		if err != nil {
 			return timings, err
+		}
+	} else {
+		var commonVersion int
+		var reporterVersion int
+
+		for _, ref := range refs {
+			if ref.ReporterType == "inventory" {
+				commonVersion = ref.RepresentationVersion
+			} else if ref.ReporterType == rec.ReporterType {
+				reporterVersion = ref.RepresentationVersion
+			}
+		}
+		// Update case: bump version and generation
+		for _, ref := range refs {
+			ref.RepresentationVersion++
+			if ref.ReporterType == "inventory" {
+				if rec.Common != nil {
+					newCommonVersion := commonVersion + 1
+					commonRep := &models.CommonRepresentation{
+						BaseRepresentation: models.BaseRepresentation{
+							LocalResourceID: refs[0].ResourceID.String(),
+							ReporterType:    "inventory",
+							ResourceType:    rec.ResourceType,
+							Version:         ref.RepresentationVersion,
+							Data:            datatypes.JSON(rec.Common),
+						},
+					}
+					dry := tx.Session(&gorm.Session{DryRun: true}).Create(commonRep)
+					sql = dry.Statement.SQL.String()
+					vars = dry.Statement.Vars
+					//fmt.Printf("  vars: %s\n", len(vars))
+					//fmt.Printf("  sql: %s\n", sql)
+					t0 = time.Now()
+					err = tx.Create(commonRep).Error
+					timings = append(timings, StepTiming{
+						Label:    "insert_common_rep",
+						SQL:      sql,
+						Duration: time.Since(t0),
+						Vars:     vars,
+						Explain:  GetExplainPlan(tx, sql, vars),
+					})
+					if err != nil {
+						return timings, err
+					}
+
+					updateRepRef := tx.Session(&gorm.Session{DryRun: true}).Model(&models.RepresentationReference{}).
+						Where("resource_id = ? AND reporter_type = ?", refs[0].ResourceID, "inventory").
+						Update("representation_version", newCommonVersion)
+					sql = updateRepRef.Statement.SQL.String()
+					vars = updateRepRef.Statement.Vars
+					t0 = time.Now()
+					err = tx.Model(&models.RepresentationReference{}).
+						Where("resource_id = ? AND reporter_type = ?", refs[0].ResourceID, "inventory").
+						Update("representation_version", newCommonVersion).Error
+					timings = append(timings, StepTiming{
+						Label:    "update_common_rep_ref",
+						SQL:      sql,
+						Duration: time.Since(t0),
+						Vars:     vars,
+						Explain:  GetExplainPlan(tx, sql, vars),
+					})
+					if err != nil {
+						return timings, err
+					}
+				}
+			} else {
+				if rec.Reporter != nil {
+					newReporterVersion := reporterVersion + 1
+					reporterRep := &models.ReporterRepresentation{
+						BaseRepresentation: models.BaseRepresentation{
+							LocalResourceID: rec.LocalResourceID,
+							ReporterType:    rec.ReporterType,
+							ResourceType:    rec.ResourceType,
+							Version:         ref.RepresentationVersion,
+							Data:            datatypes.JSON(rec.Reporter),
+						},
+						ReporterVersion:    rec.ReporterVersion,
+						ReporterInstanceID: rec.ReporterInstanceID,
+						APIHref:            rec.APIHref,
+						ConsoleHref:        rec.ConsoleHref,
+						CommonVersion:      refs[0].RepresentationVersion,
+						Tombstone:          false,
+						Generation:         ref.Generation,
+					}
+					dry := tx.Session(&gorm.Session{DryRun: true}).Create(reporterRep)
+					sql = dry.Statement.SQL.String()
+					vars = dry.Statement.Vars
+					//fmt.Printf("  vars: %s\n", len(vars))
+					//fmt.Printf("  sql: %s\n", sql)
+					t0 = time.Now()
+					err = tx.Create(reporterRep).Error
+
+					timings = append(timings, StepTiming{
+						Label:    "insert_reporter_rep",
+						SQL:      sql,
+						Duration: time.Since(t0),
+						Vars:     vars,
+						Explain:  GetExplainPlan(tx, sql, vars),
+					})
+					if err != nil {
+						return timings, err
+					}
+
+					// Update representation_reference
+
+					updateRepRef := tx.Session(&gorm.Session{DryRun: true}).Model(&models.RepresentationReference{}).
+						Where("resource_id = ? AND reporter_type = ? AND local_resource_id = ?", refs[0].ResourceID, rec.ReporterType, rec.LocalResourceID).
+						Update("representation_version", newReporterVersion)
+					sql = updateRepRef.Statement.SQL.String()
+					vars = updateRepRef.Statement.Vars
+					t0 = time.Now()
+					err = tx.Model(&models.RepresentationReference{}).
+						Where("resource_id = ? AND reporter_type = ? AND local_resource_id = ?", refs[0].ResourceID, rec.ReporterType, rec.LocalResourceID).
+						Update("representation_version", newReporterVersion).Error
+					timings = append(timings, StepTiming{
+						Label:    "update_reporter_rep_ref",
+						SQL:      sql,
+						Duration: time.Since(t0),
+						Vars:     vars,
+						Explain:  GetExplainPlan(tx, sql, vars),
+					})
+					if err != nil {
+						return timings, err
+					}
+				}
+			}
 		}
 	}
 

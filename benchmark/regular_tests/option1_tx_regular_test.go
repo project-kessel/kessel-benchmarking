@@ -16,7 +16,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var runCount = 100
+var runCount = 1
 
 const outputCSVPath = "benchmark_results_option1_10_records.csv"
 
@@ -89,6 +89,18 @@ func TestDenormalizedRefs2RepTables(t *testing.T) {
 		maxTime := durations[maxIndex]
 		maxTimings := allStepTimings[maxIndex]
 
+		/*for i, recordTimings := range allStepTimings {
+			fmt.Printf("📦 Record %d timings:\n", i)
+			for _, step := range recordTimings {
+				fmt.Printf("  🔹 Step: %s\n", step.Label)
+				fmt.Printf("     - Duration: %s\n", step.Duration)
+				fmt.Printf("     - SQL: %s\n", step.SQL)
+				if step.Explain != "" {
+					fmt.Printf("     - Explain:\n%s\n", step.Explain)
+				}
+			}
+		}*/
+
 		var maxStep benchmark.StepTiming
 		for _, step := range maxTimings {
 			if step.Duration > maxStep.Duration {
@@ -97,8 +109,8 @@ func TestDenormalizedRefs2RepTables(t *testing.T) {
 		}
 
 		if maxStep.SQL != "" {
-			fmt.Printf("  - maxStep Vars:%s\n", maxStep.Vars)
-			explainSQL := fmt.Sprintf("EXPLAIN (ANALYZE, BUFFERS) %s", maxStep.SQL)
+			//fmt.Printf("  - maxStep Vars:%s\n", maxStep.Vars)
+			explainSQL := fmt.Sprintf("EXPLAIN %s", maxStep.SQL)
 			rows, err := db.Raw(explainSQL, maxStep.Vars...).Rows()
 			if err == nil {
 				var lines []string
@@ -109,7 +121,7 @@ func TestDenormalizedRefs2RepTables(t *testing.T) {
 				}
 				maxStep.Explain = strings.Join(lines, "\n")
 			} else {
-				fmt.Printf("  Cannot generate explain plan: %s\n", err)
+				fmt.Printf("  Cannot generate explain plan for max step: %s\n", err)
 			}
 		} else {
 			fmt.Printf("  Did not generate explain plan because SQL is: %s\n", maxStep.SQL)
