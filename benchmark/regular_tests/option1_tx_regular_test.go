@@ -18,7 +18,9 @@ import (
 
 var runCount = 1
 
-const outputCSVPath = "benchmark_results_option1_10_records.csv"
+const inputRecordsPath = "input_100_records.jsonl"
+const outputCSVPath = "per_run_results_option1_100.csv"
+const outputPerRecordCSVPath = "per_record_results_option1_100.csv"
 
 func TestDenormalizedRefs2RepTables(t *testing.T) {
 	startFreshCSVFile := true
@@ -51,7 +53,7 @@ func TestDenormalizedRefs2RepTables(t *testing.T) {
 			return
 		}
 
-		records, err := benchmark.LoadInputRecords("/Users/snehagunta/git/kessel/kessel-benchmarking/benchmark/input_files/input_10_records.jsonl")
+		records, err := benchmark.LoadInputRecords("/Users/snehagunta/git/kessel/kessel-benchmarking/benchmark/input_files/" + inputRecordsPath)
 		if err != nil {
 			t.Fatalf("failed to load input records: %v", err)
 		}
@@ -64,11 +66,18 @@ func TestDenormalizedRefs2RepTables(t *testing.T) {
 			start := time.Now()
 			stepTimings, err := runInstrumentedTransaction(db, rec)
 			duration := time.Since(start)
+
 			durations = append(durations, duration)
 			allStepTimings = append(allStepTimings, stepTimings)
 
 			if err != nil {
 				t.Errorf("record %d transaction failed: %v", i, err)
+			}
+
+			writeHeader := run == 1 && i == 0
+			err = benchmark.WriteSingleRecordTimingCSV(run, i, duration, stepTimings, outputPerRecordCSVPath, writeHeader)
+			if err != nil {
+				t.Fatalf("failed to write CSV for record %d: %v", i, err)
 			}
 		}
 

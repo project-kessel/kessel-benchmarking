@@ -1,0 +1,330 @@
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+2025-05-31 13:09:59,38.584734125s,120.194292ms,1.019890584s,2.185464083s,2.185464083s,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 13:32:16,5m46.572919917s,2.310816042s,4.987379167s,1m3.262299417s,1m3.262299417s,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 13:32:59,412.832417ms,3.2245ms,6.651416ms,24.013875ms,24.013875ms,100,insert_reporter_rep,"INSERT INTO ""reporter_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reporter_version"",""reporter_instance_id"",""api_href"",""console_href"",""common_version"",""tombstone"",""generation"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)","Insert on reporter_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=2217)"
+2025-05-31 13:33:00,288.204125ms,2.420333ms,3.77225ms,15.936291ms,15.936291ms,100,insert_reporter_rep,"INSERT INTO ""reporter_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reporter_version"",""reporter_instance_id"",""api_href"",""console_href"",""common_version"",""tombstone"",""generation"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)","Insert on reporter_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=2217)"
+2025-05-31 13:33:00,276.617125ms,2.5545ms,3.782083ms,7.502459ms,7.502459ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 13:33:01,309.968958ms,2.720167ms,4.311167ms,9.223458ms,9.223458ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 13:33:39,38.293383625s,4.398417ms,25.568958ms,8.692241625s,8.692241625s,100,insert_common_rep,"INSERT INTO ""common_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reported_by"") VALUES ($1,$2,$3,$4,$5,$6)","Insert on common_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=652)"
+2025-05-31 13:33:48,8.326310333s,3.915834ms,13.761584ms,2.430827709s,2.430827709s,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 13:33:48,415.913875ms,3.419333ms,5.993916ms,33.43325ms,33.43325ms,100,insert_reporter_rep,"INSERT INTO ""reporter_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reporter_version"",""reporter_instance_id"",""api_href"",""console_href"",""common_version"",""tombstone"",""generation"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)","Insert on reporter_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=2217)"
+2025-05-31 13:34:06,16.9624525s,10.792542ms,163.355209ms,3.905133542s,3.905133542s,100,insert_common_rep,"INSERT INTO ""common_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reported_by"") VALUES ($1,$2,$3,$4,$5,$6)","Insert on common_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=652)"
+2025-05-31 13:34:45,37.186426125s,3.676375ms,8.858417ms,36.703308334s,36.703308334s,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 13:34:46,390.861875ms,3.418167ms,5.531875ms,14.156791ms,14.156791ms,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 13:36:26,1m40.435665416s,196.608916ms,1.674360375s,52.342279792s,52.342279792s,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Hash Join  (cost=1.89..3.52 rows=2 width=64)
+  Hash Cond: (r2.resource_id = r1.resource_id)
+  ->  Seq Scan on representation_references_option1 r2  (cost=0.00..1.44 rows=44 width=64)
+  ->  Hash  (cost=1.88..1.88 rows=1 width=16)
+        ->  Seq Scan on representation_references_option1 r1  (cost=0.00..1.88 rows=1 width=16)
+              Filter: ((local_resource_id = '12'::text) AND (reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))"
+2025-05-31 13:38:17,1m50.046133417s,603.338125ms,3.030059291s,5.497721708s,5.497721708s,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 13:45:45,4m8.043545s,1.280464167s,6.653270167s,14.275252083s,14.275252083s,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 13:50:03,4m17.772922083s,1.446290833s,4.017496833s,1m12.738986709s,1m12.738986709s,100,insert_reporter_rep,"INSERT INTO ""reporter_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reporter_version"",""reporter_instance_id"",""api_href"",""console_href"",""common_version"",""tombstone"",""generation"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)","Insert on reporter_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=2217)"
+2025-05-31 13:54:05,4m0.532164875s,402.460625ms,2.249834125s,1m19.704615666s,1m19.704615666s,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 13:54:11,3.474238584s,3.63525ms,76.760167ms,664.503916ms,664.503916ms,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 13:54:29,17.875266042s,36.780417ms,479.368917ms,1.876591083s,1.876591083s,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 13:54:29,511.570542ms,4.753542ms,7.084708ms,18.050834ms,18.050834ms,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 13:54:30,556.288917ms,4.876875ms,7.886042ms,20.415125ms,20.415125ms,100,insert_common_rep,"INSERT INTO ""common_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reported_by"") VALUES ($1,$2,$3,$4,$5,$6)","Insert on common_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=652)"
+2025-05-31 13:54:31,508.502334ms,4.782166ms,7.71325ms,15.390042ms,15.390042ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 13:54:52,20.797437209s,8.973ms,847.038625ms,3.372635667s,3.372635667s,100,insert_reporter_rep,"INSERT INTO ""reporter_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reporter_version"",""reporter_instance_id"",""api_href"",""console_href"",""common_version"",""tombstone"",""generation"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)","Insert on reporter_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=2217)"
+2025-05-31 13:54:52,561.700875ms,5.128791ms,7.555042ms,18.057709ms,18.057709ms,100,insert_reporter_rep,"INSERT INTO ""reporter_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reporter_version"",""reporter_instance_id"",""api_href"",""console_href"",""common_version"",""tombstone"",""generation"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)","Insert on reporter_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=2217)"
+2025-05-31 13:54:54,1.234576209s,9.367417ms,24.712916ms,54.811584ms,54.811584ms,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 13:57:42,2m47.930740625s,590.019375ms,2.209883417s,1m20.713416791s,1m20.713416791s,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Hash Join  (cost=1.93..3.58 rows=2 width=64)
+  Hash Cond: (r2.resource_id = r1.resource_id)
+  ->  Seq Scan on representation_references_option1 r2  (cost=0.00..1.46 rows=46 width=64)
+  ->  Hash  (cost=1.92..1.92 rows=1 width=16)
+        ->  Seq Scan on representation_references_option1 r1  (cost=0.00..1.92 rows=1 width=16)
+              Filter: ((local_resource_id = '12'::text) AND (reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))"
+2025-05-31 13:57:43,672.221625ms,6.061584ms,9.216542ms,23.742916ms,23.742916ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 13:57:48,4.112224417s,8.232709ms,112.678875ms,496.98175ms,496.98175ms,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 13:57:49,806.550417ms,5.699416ms,10.322667ms,72.134792ms,72.134792ms,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 13:59:48,1m58.294117417s,21.230666ms,1.579881875s,51.613456542s,51.613456542s,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 13:59:51,1.793228s,8.94575ms,25.018125ms,214.621292ms,214.621292ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 14:00:10,18.18674s,32.513959ms,491.556833ms,1.469329959s,1.469329959s,100,insert_common_rep,"INSERT INTO ""common_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reported_by"") VALUES ($1,$2,$3,$4,$5,$6)","Insert on common_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=652)"
+2025-05-31 14:00:54,42.525836209s,53.279125ms,1.5841035s,4.664960958s,4.664960958s,100,insert_common_rep,"INSERT INTO ""common_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reported_by"") VALUES ($1,$2,$3,$4,$5,$6)","Insert on common_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=652)"
+2025-05-31 14:07:08,6m12.873386s,40.990709ms,2.036766708s,2m49.327668625s,2m49.327668625s,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 14:09:35,2m11.313693s,8.8795ms,3.493119917s,40.144000125s,40.144000125s,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 14:09:49,12.406989167s,23.9405ms,272.384ms,2.027154458s,2.027154458s,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 14:21:16,11m17.403599375s,3.876020458s,13.992202291s,1m28.6798545s,1m28.6798545s,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 14:27:26,3m4.027861041s,440.35875ms,5.452381709s,32.97213425s,32.97213425s,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 14:27:26,362.46625ms,3.103541ms,5.764125ms,14.741792ms,14.741792ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 14:27:27,469.975792ms,4.079334ms,6.855834ms,18.675375ms,18.675375ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 14:27:27,379.544792ms,3.626167ms,5.686833ms,12.6015ms,12.6015ms,100,insert_reporter_rep,"INSERT INTO ""reporter_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reporter_version"",""reporter_instance_id"",""api_href"",""console_href"",""common_version"",""tombstone"",""generation"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)","Insert on reporter_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=2217)"
+2025-05-31 14:27:28,416.331666ms,3.942209ms,6.007167ms,11.354625ms,11.354625ms,100,insert_reporter_rep,"INSERT INTO ""reporter_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reporter_version"",""reporter_instance_id"",""api_href"",""console_href"",""common_version"",""tombstone"",""generation"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)","Insert on reporter_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=2217)"
+2025-05-31 14:27:28,443.7295ms,3.959209ms,7.392083ms,11.730042ms,11.730042ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 14:27:47,16.136946834s,4.271458ms,782.834084ms,2.984563209s,2.984563209s,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Hash Join  (cost=2.13..3.92 rows=2 width=64)
+  Hash Cond: (r2.resource_id = r1.resource_id)
+  ->  Seq Scan on representation_references_option1 r2  (cost=0.00..1.56 rows=56 width=64)
+  ->  Hash  (cost=2.12..2.12 rows=1 width=16)
+        ->  Seq Scan on representation_references_option1 r1  (cost=0.00..2.12 rows=1 width=16)
+              Filter: ((local_resource_id = '12'::text) AND (reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))"
+2025-05-31 14:35:55,7m1.328293541s,2.194035333s,8.53453075s,1m1.69998975s,1m1.69998975s,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 14:36:02,4.830532875s,11.111667ms,176.527334ms,524.227458ms,524.227458ms,100,insert_reporter_rep,"INSERT INTO ""reporter_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reporter_version"",""reporter_instance_id"",""api_href"",""console_href"",""common_version"",""tombstone"",""generation"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)","Insert on reporter_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=2217)"
+2025-05-31 14:36:26,23.49445925s,43.632834ms,710.682791ms,1.687136667s,1.687136667s,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 14:36:27,457.464834ms,4.465167ms,6.203417ms,14.193917ms,14.193917ms,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 14:37:42,1m12.780760083s,187.50125ms,1.327320959s,11.296832458s,11.296832458s,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 14:41:11,2m19.472595708s,105.9885ms,3.55364275s,55.018298708s,55.018298708s,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 14:41:23,11.692984958s,9.472ms,204.244792ms,2.740921792s,2.740921792s,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 14:44:03,2m29.6143945s,1.175039542s,2.941481375s,4.852036334s,4.852036334s,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 14:47:08,2m20.968745792s,1.0457145s,2.915358958s,11.902339708s,11.902339708s,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 14:49:57,1m46.245448416s,811.52275ms,1.611563292s,16.2302765s,16.2302765s,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 14:50:02,413.88775ms,3.890375ms,5.908375ms,12.028792ms,12.028792ms,100,insert_reporter_rep,"INSERT INTO ""reporter_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reporter_version"",""reporter_instance_id"",""api_href"",""console_href"",""common_version"",""tombstone"",""generation"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)","Insert on reporter_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=2217)"
+2025-05-31 14:50:03,451.020958ms,4.183917ms,6.490166ms,10.409916ms,10.409916ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 14:55:42,5m38.566598417s,53.138958ms,1.567620791s,2m19.747253459s,2m19.747253459s,100,insert_common_rep,"INSERT INTO ""common_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reported_by"") VALUES ($1,$2,$3,$4,$5,$6)","Insert on common_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=652)"
+2025-05-31 14:55:43,672.621167ms,4.417416ms,9.454875ms,80.445416ms,80.445416ms,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 14:56:31,48.119168833s,255.99475ms,1.151149625s,2.068811917s,2.068811917s,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 14:56:40,7.362234333s,17.936083ms,203.824417ms,813.589042ms,813.589042ms,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 14:56:40,332.220625ms,3.072291ms,5.180458ms,9.061834ms,9.061834ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 14:56:40,229.488166ms,2.002667ms,3.246041ms,6.198167ms,6.198167ms,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 14:56:41,215.686791ms,1.871208ms,2.966417ms,5.290959ms,5.290959ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 14:56:41,256.355875ms,2.374208ms,3.670667ms,6.074416ms,6.074416ms,100,insert_reporter_rep,"INSERT INTO ""reporter_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reporter_version"",""reporter_instance_id"",""api_href"",""console_href"",""common_version"",""tombstone"",""generation"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)","Insert on reporter_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=2217)"
+2025-05-31 14:56:41,261.1845ms,2.390958ms,3.568833ms,8.581959ms,8.581959ms,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 14:56:41,193.72675ms,1.639917ms,2.573458ms,5.182791ms,5.182791ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 14:56:42,312.944083ms,2.505ms,5.705791ms,12.800834ms,12.800834ms,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 14:56:42,346.749083ms,2.76375ms,5.746583ms,14.489167ms,14.489167ms,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 14:56:45,2.316234208s,11.478291ms,52.5525ms,190.593ms,190.593ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 14:56:53,7.687124s,64.0255ms,156.36775ms,411.524958ms,411.524958ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 14:57:50,56.3359755s,542.512375ms,988.368208ms,2.356311083s,2.356311083s,100,insert_refs,"INSERT INTO ""representation_references_option1"" (""resource_id"",""local_resource_id"",""reporter_type"",""resource_type"",""reporter_instance_id"",""representation_version"",""generation"",""tombstone"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8),($9,$10,$11,$12,$13,$14,$15,$16)","Insert on representation_references_option1  (cost=0.00..0.03 rows=0 width=0)
+  ->  Values Scan on ""*VALUES*""  (cost=0.00..0.03 rows=2 width=161)"
+2025-05-31 15:09:18,11m23.319430875s,3.426772084s,11.107048583s,1m26.152957667s,1m26.152957667s,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 15:17:43,4m33.9267595s,1.432723584s,6.210938417s,41.870646042s,41.870646042s,100,insert_reporter_rep,"INSERT INTO ""reporter_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reporter_version"",""reporter_instance_id"",""api_href"",""console_href"",""common_version"",""tombstone"",""generation"") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)","Insert on reporter_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=2217)"
+2025-05-31 15:17:44,455.694333ms,4.159792ms,6.628708ms,13.675ms,13.675ms,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 15:17:44,439.699541ms,4.159958ms,6.336375ms,12.435416ms,12.435416ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 15:17:45,507.812292ms,4.579667ms,8.969292ms,12.313167ms,12.313167ms,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 15:17:45,438.174625ms,4.222708ms,6.315458ms,11.408833ms,11.408833ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 15:20:00,2m14.546661959s,435.82525ms,3.789860917s,20.9970395s,20.9970395s,100,insert_common_rep,"INSERT INTO ""common_representation_option1"" (""local_resource_id"",""reporter_type"",""resource_type"",""version"",""data"",""reported_by"") VALUES ($1,$2,$3,$4,$5,$6)","Insert on common_representation_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=652)"
+2025-05-31 15:20:24,22.092585333s,14.613708ms,680.779ms,2.935642s,2.935642s,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+2025-05-31 15:20:25,858.899417ms,7.0805ms,13.90125ms,23.596708ms,23.596708ms,100,select_refs_join,SELECT r2.* FROM representation_references_option1 AS r1 JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id WHERE r1.local_resource_id = $1 AND r1.reporter_type = $2 AND r1.resource_type = $3 AND r1.reporter_instance_id = $4,"Nested Loop  (cost=8.33..19.04 rows=2 width=161)
+  ->  Bitmap Heap Scan on representation_references_option1 r1  (cost=4.16..9.52 rows=1 width=16)
+        Recheck Cond: (local_resource_id = '12'::text)
+        Filter: ((reporter_type = 'hbi'::text) AND (resource_type = 'host'::text) AND (reporter_instance_id = 'abc'::text))
+        ->  Bitmap Index Scan on idx_representation_references_option1_local_resource_id  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (local_resource_id = '12'::text)
+  ->  Bitmap Heap Scan on representation_references_option1 r2  (cost=4.16..9.50 rows=2 width=161)
+        Recheck Cond: (resource_id = r1.resource_id)
+        ->  Bitmap Index Scan on unique_rep_ref_idx  (cost=0.00..4.16 rows=2 width=0)
+              Index Cond: (resource_id = r1.resource_id)"
+2025-05-31 15:20:30,4.758112709s,6.440041ms,120.413375ms,889.036666ms,889.036666ms,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+2025-06-01 12:29:14,9.1231575s,5.5195ms,24.272916ms,3.029493542s,3.029493542s,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
+  ->  Result  (cost=0.00..0.01 rows=1 width=290)"

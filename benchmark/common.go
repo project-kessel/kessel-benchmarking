@@ -10,6 +10,7 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -110,6 +111,56 @@ func GetExplainPlan(tx *gorm.DB, sql string, vars []interface{}) string {
 	explainPlan := strings.Join(output, "\n")
 	//fmt.Printf("Explain plan calculated: %s\n", explainPlan)
 	return explainPlan
+}
+
+func WriteSingleRecordTimingCSV(
+	run int,
+	recordIndex int,
+	duration time.Duration,
+	stepTimings []StepTiming,
+	outputPath string,
+	writeHeader bool,
+) error {
+	var file *os.File
+	var err error
+
+	if writeHeader {
+		file, err = os.Create(outputPath)
+	} else {
+		file, err = os.OpenFile(outputPath, os.O_APPEND|os.O_WRONLY, 0644)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to open CSV file: %w", err)
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	if writeHeader {
+		header := []string{"run", "record_index", "record_duration_ms", "step_label", "step_duration_ms", "sql", "vars", "explain"}
+		if err := writer.Write(header); err != nil {
+			return fmt.Errorf("failed to write header: %w", err)
+		}
+	}
+
+	for _, step := range stepTimings {
+		row := []string{
+			strconv.Itoa(run),
+			strconv.Itoa(recordIndex),
+			fmt.Sprintf("%.3f", duration.Seconds()*1000),
+			step.Label,
+			fmt.Sprintf("%.3f", step.Duration.Seconds()*1000),
+			step.SQL,
+			fmt.Sprintf("%v", step.Vars),
+			step.Explain,
+		}
+		if err := writer.Write(row); err != nil {
+			return fmt.Errorf("failed to write row: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTiming, error) {
