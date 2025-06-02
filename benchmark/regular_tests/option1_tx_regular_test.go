@@ -2,7 +2,6 @@ package regular_tests
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/yourusername/go-db-bench/db/schemas/option1_denormalized_reference_2_rep_tables/models"
 	"gorm.io/datatypes"
@@ -11,7 +10,6 @@ import (
 	"time"
 
 	"github.com/yourusername/go-db-bench/benchmark"
-	"github.com/yourusername/go-db-bench/config"
 )
 
 var runCount = 5
@@ -22,44 +20,12 @@ const outputPerRecordCSVPath = "per_record_results_option1_10.csv"
 const generateExplainPlan = false
 
 func TestDenormalizedRefs2RepTables(t *testing.T) {
-	startFreshCSVFile := true
-	cfg := config.LoadDBConfig()
+	if generateExplainPlan {
 
-	for run := 1; run <= runCount; run++ {
-		if run > 1 {
-			startFreshCSVFile = false
-		}
-		fmt.Printf("\n🔁 Starting run %d/%d\n", run, runCount)
-
-		// 1. Load input records from file
-		records, err := benchmark.LoadInputRecords("/Users/snehagunta/git/kessel/kessel-benchmarking/benchmark/input_files/" + inputRecordsPath)
-		if err != nil {
-			t.Fatalf("failed to load input records: %v", err)
-		}
-
-		//2. Timed: Execute the transaction, capture times for processing per record, times per SQL stmt, total time to process all records
-		durations := make([]time.Duration, 0, len(records))
-		allStepTimings := [][]benchmark.StepTiming{}
-		totalElapsed, durations, allStepTimings, err := benchmark.ExecuteRun(cfg, t, records, durations, allStepTimings, ProcessRecordOption1Instrumented)
-		if err != nil {
-			return
-		}
-
-		//3. Write all record level outputs to csv
-		err = benchmark.WriteCSVAllRecords(run, durations, allStepTimings, outputPerRecordCSVPath)
-		if err != nil {
-			t.Fatalf("failed to write CSV for all records: %v", err)
-		}
-
-		//4. Analyze the run
-		p50, p90, p99, maxTime, maxStep := benchmark.AnalyzeRun(durations, allStepTimings, run, records, totalElapsed)
-
-		// write aggregated records to csv
-		benchmark.WriteCSVForRun(
-			run, totalElapsed, p50, p90, p99, maxTime, len(records), maxStep, outputCSVPath, startFreshCSVFile,
-		)
-
+	} else {
+		benchmark.RunTestForOption(t, ProcessRecordOption1Instrumented, runCount, inputRecordsPath, outputPerRecordCSVPath, outputCSVPath)
 	}
+
 }
 
 func ProcessRecordOption1Instrumented(tx *gorm.DB, rec benchmark.InputRecord) ([]benchmark.StepTiming, error) {

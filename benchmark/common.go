@@ -20,6 +20,47 @@ import (
 	"time"
 )
 
+func RunTestForOption(t *testing.T, option func(*gorm.DB, InputRecord) ([]StepTiming, error), runCount int, inputRecordsPath string, outputPerRecordCSVPath string, outputCSVPath string) {
+	startFreshCSVFile := true
+	cfg := config.LoadDBConfig()
+
+	for run := 1; run <= runCount; run++ {
+		if run > 1 {
+			startFreshCSVFile = false
+		}
+		fmt.Printf("\n🔁 Starting run %d/%d\n", run, runCount)
+
+		// 1. Load input records from file
+		records, err := LoadInputRecords("/Users/snehagunta/git/kessel/kessel-benchmarking/benchmark/input_files/" + inputRecordsPath)
+		if err != nil {
+			t.Fatalf("failed to load input records: %v", err)
+		}
+
+		//2. Timed: Execute the transaction, capture times for processing per record, times per SQL stmt, total time to process all records
+		durations := make([]time.Duration, 0, len(records))
+		allStepTimings := [][]StepTiming{}
+		totalElapsed, durations, allStepTimings, err := ExecuteRun(cfg, t, records, durations, allStepTimings, option)
+		if err != nil {
+			return
+		}
+
+		//3. Write all record level outputs to csv
+		err = WriteCSVAllRecords(run, durations, allStepTimings, outputPerRecordCSVPath)
+		if err != nil {
+			t.Fatalf("failed to write CSV for all records: %v", err)
+		}
+
+		//4. Analyze the run
+		p50, p90, p99, maxTime, maxStep := AnalyzeRun(durations, allStepTimings, run, records, totalElapsed)
+
+		// write aggregated records to csv
+		WriteCSVForRun(
+			run, totalElapsed, p50, p90, p99, maxTime, len(records), maxStep, outputCSVPath, startFreshCSVFile,
+		)
+
+	}
+}
+
 func LoadInputRecords(path string) ([]InputRecord, error) {
 	file, err := os.Open(path)
 	if err != nil {
