@@ -10,6 +10,7 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -163,6 +164,25 @@ func WriteSingleRecordTimingCSV(
 	return nil
 }
 
+func openCSVWithDateSuffix(filePath string) (*os.File, error) {
+	// Extract base name and extension
+	ext := filepath.Ext(filePath)
+	base := strings.TrimSuffix(filepath.Base(filePath), ext)
+	dir := filepath.Dir(filePath)
+
+	// Append today's date
+	dateSuffix := time.Now().Format("2006-01-02")
+	fileName := fmt.Sprintf("%s_%s%s", base, dateSuffix, ext)
+	fullPath := filepath.Join(dir, fileName)
+
+	// Open or create file in append mode
+	file, err := os.OpenFile(fullPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("❌ Failed to open or create CSV file: %w", err)
+	}
+	return file, nil
+}
+
 func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTiming, error) {
 	timings := []StepTiming{}
 
@@ -258,9 +278,10 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTimin
 
 		commonRep := &models.CommonRepresentation{
 			BaseRepresentation: models.BaseRepresentation{
-				LocalResourceID: resourceID.String(), ReporterType: "inventory",
-				ResourceType: rec.ResourceType, Version: 1, Data: commonData,
+				Data: commonData,
 			},
+			LocalResourceID: resourceID.String(), ReporterType: "inventory",
+			ResourceType: rec.ResourceType, Version: 1,
 		}
 
 		dry = tx.Session(&gorm.Session{DryRun: true}).Create(commonRep)
@@ -290,9 +311,10 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTimin
 
 		reporterRep := &models.ReporterRepresentation{
 			BaseRepresentation: models.BaseRepresentation{
-				LocalResourceID: rec.LocalResourceID, ReporterType: rec.ReporterType,
-				ResourceType: rec.ResourceType, Version: 1, Data: reporterData,
+				Data: reporterData,
 			},
+			LocalResourceID: rec.LocalResourceID, ReporterType: rec.ReporterType,
+			ResourceType: rec.ResourceType, Version: 1,
 			ReporterVersion: rec.ReporterVersion, ReporterInstanceID: rec.ReporterInstanceID,
 			APIHref: rec.APIHref, ConsoleHref: rec.ConsoleHref, CommonVersion: 1,
 			Tombstone: false, Generation: 1,
@@ -333,12 +355,13 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTimin
 					newCommonVersion := commonVersion + 1
 					commonRep := &models.CommonRepresentation{
 						BaseRepresentation: models.BaseRepresentation{
-							LocalResourceID: refs[0].ResourceID.String(),
-							ReporterType:    "inventory",
-							ResourceType:    rec.ResourceType,
-							Version:         ref.RepresentationVersion,
-							Data:            datatypes.JSON(rec.Common),
+
+							Data: datatypes.JSON(rec.Common),
 						},
+						LocalResourceID: refs[0].ResourceID.String(),
+						ReporterType:    "inventory",
+						ResourceType:    rec.ResourceType,
+						Version:         ref.RepresentationVersion,
 					}
 					dry := tx.Session(&gorm.Session{DryRun: true}).Create(commonRep)
 					sql = dry.Statement.SQL.String()
@@ -383,12 +406,12 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTimin
 					newReporterVersion := reporterVersion + 1
 					reporterRep := &models.ReporterRepresentation{
 						BaseRepresentation: models.BaseRepresentation{
-							LocalResourceID: rec.LocalResourceID,
-							ReporterType:    rec.ReporterType,
-							ResourceType:    rec.ResourceType,
-							Version:         ref.RepresentationVersion,
-							Data:            datatypes.JSON(rec.Reporter),
+							Data: datatypes.JSON(rec.Reporter),
 						},
+						LocalResourceID:    rec.LocalResourceID,
+						ReporterType:       rec.ReporterType,
+						ResourceType:       rec.ResourceType,
+						Version:            ref.RepresentationVersion,
 						ReporterVersion:    rec.ReporterVersion,
 						ReporterInstanceID: rec.ReporterInstanceID,
 						APIHref:            rec.APIHref,
@@ -443,176 +466,6 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTimin
 	}
 
 	return timings, nil
-}
-
-func ProcessRecordOption1(tx *gorm.DB, rec InputRecord) error {
-	var refs []models.RepresentationReference
-	err := tx.
-		Table("representation_references_option1 AS r1").
-		Joins("JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id").
-		Where("r1.local_resource_id = ? AND r1.reporter_type = ? AND r1.resource_type = ? AND r1.reporter_instance_id = ?",
-			rec.LocalResourceID, rec.ReporterType, rec.ResourceType, rec.ReporterInstanceID).
-		Select("r2.*").
-		Scan(&refs).Error
-	if err != nil {
-		return err
-	}
-
-	if len(refs) == 0 {
-		// Create new resource
-		resourceID := uuid.New()
-		res := models.Resource{
-			ID:   resourceID,
-			Type: rec.ResourceType,
-		}
-		if err := tx.Create(&res).Error; err != nil {
-			return err
-		}
-
-		// Insert common and reporter representation_references
-		refsToCreate := []models.RepresentationReference{
-			{
-				ResourceID:            resourceID,
-				LocalResourceID:       rec.LocalResourceID,
-				ReporterType:          rec.ReporterType,
-				ReporterInstanceID:    rec.ReporterInstanceID,
-				ResourceType:          rec.ResourceType,
-				RepresentationVersion: 1,
-				Generation:            1,
-				Tombstone:             false,
-			},
-			{
-				ResourceID:            resourceID,
-				LocalResourceID:       resourceID.String(),
-				ReporterType:          "inventory",
-				RepresentationVersion: 1,
-				Generation:            1,
-				Tombstone:             false,
-			},
-		}
-		if err := tx.Create(&refsToCreate).Error; err != nil {
-			return err
-		}
-
-		var commonData datatypes.JSON
-		if rec.Common == nil || len(rec.Common) == 0 {
-			defaultCommon := map[string]string{"workspaceId": "default"}
-			bytes, err := json.Marshal(defaultCommon)
-			if err != nil {
-				return err
-			}
-			commonData = datatypes.JSON(bytes)
-		} else {
-			commonData = datatypes.JSON(rec.Common)
-		}
-
-		// Create representations
-		if err := tx.Create(&models.CommonRepresentation{
-			BaseRepresentation: models.BaseRepresentation{
-				LocalResourceID: resourceID.String(),
-				ReporterType:    "inventory",
-				ResourceType:    rec.ResourceType,
-				Version:         1,
-				Data:            commonData,
-			},
-		}).Error; err != nil {
-			return err
-		}
-
-		var reporterData datatypes.JSON
-		if rec.Reporter == nil || len(rec.Reporter) == 0 {
-			reporterData = datatypes.JSON([]byte(`{}`))
-		} else {
-			reporterData = datatypes.JSON(rec.Reporter)
-		}
-
-		if err := tx.Create(&models.ReporterRepresentation{
-			BaseRepresentation: models.BaseRepresentation{
-				LocalResourceID: rec.LocalResourceID,
-				ReporterType:    rec.ReporterType,
-				ResourceType:    rec.ResourceType,
-				Version:         1,
-				Data:            reporterData,
-			},
-			ReporterVersion:    rec.ReporterVersion,
-			ReporterInstanceID: rec.ReporterInstanceID,
-			APIHref:            rec.APIHref,
-			ConsoleHref:        rec.ConsoleHref,
-			CommonVersion:      1,
-			Tombstone:          false,
-			Generation:         1,
-		}).Error; err != nil {
-			return err
-		}
-	} else {
-		var commonVersion int
-		var reporterVersion int
-
-		for _, ref := range refs {
-			if ref.ReporterType == "inventory" {
-				commonVersion = ref.RepresentationVersion
-			} else if ref.ReporterType == rec.ReporterType {
-				reporterVersion = ref.RepresentationVersion
-			}
-		}
-		// Update case: bump version and generation
-		for _, ref := range refs {
-			ref.RepresentationVersion++
-			if ref.ReporterType == "inventory" {
-				if rec.Common != nil {
-					newCommonVersion := commonVersion + 1
-					if err := tx.Create(&models.CommonRepresentation{
-						BaseRepresentation: models.BaseRepresentation{
-							LocalResourceID: refs[0].ResourceID.String(),
-							ReporterType:    "inventory",
-							ResourceType:    rec.ResourceType,
-							Version:         ref.RepresentationVersion,
-							Data:            datatypes.JSON(rec.Common),
-						},
-					}).Error; err != nil {
-						return err
-					}
-
-					if err := tx.Model(&models.RepresentationReference{}).
-						Where("resource_id = ? AND reporter_type = ?", refs[0].ResourceID, "inventory").
-						Update("representation_version", newCommonVersion).Error; err != nil {
-						return err
-					}
-				}
-			} else {
-				if rec.Reporter != nil {
-					newReporterVersion := reporterVersion + 1
-					if err := tx.Create(&models.ReporterRepresentation{
-						BaseRepresentation: models.BaseRepresentation{
-							LocalResourceID: rec.LocalResourceID,
-							ReporterType:    rec.ReporterType,
-							ResourceType:    rec.ResourceType,
-							Version:         ref.RepresentationVersion,
-							Data:            datatypes.JSON(rec.Reporter),
-						},
-						ReporterVersion:    rec.ReporterVersion,
-						ReporterInstanceID: rec.ReporterInstanceID,
-						APIHref:            rec.APIHref,
-						ConsoleHref:        rec.ConsoleHref,
-						CommonVersion:      refs[0].RepresentationVersion,
-						Tombstone:          false,
-						Generation:         ref.Generation,
-					}).Error; err != nil {
-						return err
-					}
-
-					// Update representation_reference
-					if err := tx.Model(&models.RepresentationReference{}).
-						Where("resource_id = ? AND reporter_type = ? AND local_resource_id = ?", refs[0].ResourceID, rec.ReporterType, rec.LocalResourceID).
-						Update("representation_version", newReporterVersion).Error; err != nil {
-						return err
-					}
-				}
-			}
-		}
-	}
-
-	return nil
 }
 
 func ProcessRecordOption3(tx *gorm.DB, rec InputRecord) error {
@@ -679,12 +532,12 @@ func ProcessRecordOption3(tx *gorm.DB, rec InputRecord) error {
 		// Create representations
 		if err := tx.Create(&models.CommonRepresentation{
 			BaseRepresentation: models.BaseRepresentation{
-				LocalResourceID: resourceID.String(),
-				ReporterType:    "inventory",
-				ResourceType:    rec.ResourceType,
-				Version:         1,
-				Data:            commonData,
+				Data: commonData,
 			},
+			LocalResourceID: resourceID.String(),
+			ReporterType:    "inventory",
+			ResourceType:    rec.ResourceType,
+			Version:         1,
 		}).Error; err != nil {
 			return err
 		}
@@ -698,12 +551,12 @@ func ProcessRecordOption3(tx *gorm.DB, rec InputRecord) error {
 
 		if err := tx.Create(&models.ReporterRepresentation{
 			BaseRepresentation: models.BaseRepresentation{
-				LocalResourceID: rec.LocalResourceID,
-				ReporterType:    rec.ReporterType,
-				ResourceType:    rec.ResourceType,
-				Version:         1,
-				Data:            reporterData,
+				Data: reporterData,
 			},
+			LocalResourceID:    rec.LocalResourceID,
+			ReporterType:       rec.ReporterType,
+			ResourceType:       rec.ResourceType,
+			Version:            1,
 			ReporterVersion:    rec.ReporterVersion,
 			ReporterInstanceID: rec.ReporterInstanceID,
 			APIHref:            rec.APIHref,
@@ -733,12 +586,13 @@ func ProcessRecordOption3(tx *gorm.DB, rec InputRecord) error {
 					newCommonVersion := commonVersion + 1
 					if err := tx.Create(&models.CommonRepresentation{
 						BaseRepresentation: models.BaseRepresentation{
-							LocalResourceID: refs[0].ResourceID.String(),
-							ReporterType:    "inventory",
-							ResourceType:    rec.ResourceType,
-							Version:         ref.RepresentationVersion,
-							Data:            datatypes.JSON(rec.Common),
+
+							Data: datatypes.JSON(rec.Common),
 						},
+						LocalResourceID: refs[0].ResourceID.String(),
+						ReporterType:    "inventory",
+						ResourceType:    rec.ResourceType,
+						Version:         ref.RepresentationVersion,
 					}).Error; err != nil {
 						return err
 					}
@@ -754,12 +608,13 @@ func ProcessRecordOption3(tx *gorm.DB, rec InputRecord) error {
 					newReporterVersion := reporterVersion + 1
 					if err := tx.Create(&models.ReporterRepresentation{
 						BaseRepresentation: models.BaseRepresentation{
-							LocalResourceID: rec.LocalResourceID,
-							ReporterType:    rec.ReporterType,
-							ResourceType:    rec.ResourceType,
-							Version:         ref.RepresentationVersion,
-							Data:            datatypes.JSON(rec.Reporter),
+
+							Data: datatypes.JSON(rec.Reporter),
 						},
+						LocalResourceID:    rec.LocalResourceID,
+						ReporterType:       rec.ReporterType,
+						ResourceType:       rec.ResourceType,
+						Version:            ref.RepresentationVersion,
 						ReporterVersion:    rec.ReporterVersion,
 						ReporterInstanceID: rec.ReporterInstanceID,
 						APIHref:            rec.APIHref,

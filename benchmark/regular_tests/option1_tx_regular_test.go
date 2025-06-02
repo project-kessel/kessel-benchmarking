@@ -18,9 +18,9 @@ import (
 
 var runCount = 1
 
-const inputRecordsPath = "input_100_records.jsonl"
-const outputCSVPath = "per_run_results_option1_100.csv"
-const outputPerRecordCSVPath = "per_record_results_option1_100.csv"
+const inputRecordsPath = "input_10_records.jsonl"
+const outputCSVPath = "per_run_results_option1_10.csv"
+const outputPerRecordCSVPath = "per_record_results_option1_10.csv"
 
 func TestDenormalizedRefs2RepTables(t *testing.T) {
 	startFreshCSVFile := true
@@ -97,18 +97,6 @@ func TestDenormalizedRefs2RepTables(t *testing.T) {
 		maxIndex := len(durations) - 1
 		maxTime := durations[maxIndex]
 		maxTimings := allStepTimings[maxIndex]
-
-		/*for i, recordTimings := range allStepTimings {
-			fmt.Printf("📦 Record %d timings:\n", i)
-			for _, step := range recordTimings {
-				fmt.Printf("  🔹 Step: %s\n", step.Label)
-				fmt.Printf("     - Duration: %s\n", step.Duration)
-				fmt.Printf("     - SQL: %s\n", step.SQL)
-				if step.Explain != "" {
-					fmt.Printf("     - Explain:\n%s\n", step.Explain)
-				}
-			}
-		}*/
 
 		var maxStep benchmark.StepTiming
 		for _, step := range maxTimings {
