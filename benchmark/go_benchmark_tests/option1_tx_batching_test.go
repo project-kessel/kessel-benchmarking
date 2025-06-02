@@ -1,17 +1,6 @@
 package go_benchmark_tests
 
-import (
-	"database/sql"
-	"fmt"
-	"github.com/yourusername/go-db-bench/benchmark"
-	"github.com/yourusername/go-db-bench/config"
-	"github.com/yourusername/go-db-bench/db/schemas/option1_denormalized_reference_2_rep_tables/models"
-	"gorm.io/gorm"
-	"os"
-	"testing"
-)
-
-func benchmarkDenormalizedReferences2RepTablesBatched(b *testing.B) {
+/*func benchmarkDenormalizedReferences2RepTablesBatched(b *testing.B) {
 
 	db := config.ConnectDB()
 	_ = db.AutoMigrate(
@@ -56,6 +45,6 @@ func benchmarkDenormalizedReferences2RepTablesBatched(b *testing.B) {
 			}
 		})
 	}
-}
+}*/
 
 // add indexes, unique

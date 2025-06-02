@@ -2,52 +2,23 @@ package benchmark
 
 import (
 	"bufio"
+	"database/sql"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/yourusername/go-db-bench/config"
 	"github.com/yourusername/go-db-bench/db/schemas/option1_denormalized_reference_2_rep_tables/models"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
+	"testing"
 	"time"
 )
-
-func WriteCSV(total time.Duration, p50, p90, p99, max time.Duration, count int, outputCSVPath string, startFreshCSVFile bool) {
-	mode := os.O_APPEND | os.O_CREATE | os.O_WRONLY
-	if startFreshCSVFile {
-		mode = os.O_CREATE | os.O_WRONLY | os.O_TRUNC
-	}
-
-	f, err := os.OpenFile(outputCSVPath, mode, 0644)
-	if err != nil {
-		fmt.Printf("❌ Failed to write CSV: %v\n", err)
-		return
-	}
-	defer f.Close()
-
-	writer := csv.NewWriter(f)
-	defer writer.Flush()
-
-	if startFreshCSVFile {
-		_ = writer.Write([]string{"Timestamp", "Records", "TotalTime", "p50", "p90", "p99", "Max"})
-	}
-
-	record := []string{
-		time.Now().Format("2006-01-02 15:04:05"),
-		fmt.Sprintf("%d", count),
-		total.String(),
-		p50.String(),
-		p90.String(),
-		p99.String(),
-		max.String(),
-	}
-
-	_ = writer.Write(record)
-}
 
 func LoadInputRecords(path string) ([]InputRecord, error) {
 	file, err := os.Open(path)
@@ -91,381 +62,6 @@ type StepTiming struct {
 	Duration time.Duration
 	Explain  string
 	Vars     []interface{}
-}
-
-func GetExplainPlan(tx *gorm.DB, sql string, vars []interface{}) string {
-	//explainSQL := "EXPLAIN (ANALYZE, BUFFERS) " + sql
-	explainSQL := "EXPLAIN " + sql
-	rows, err := tx.Raw(explainSQL, vars...).Rows()
-	if err != nil {
-		return fmt.Sprintf("❌ failed to get explain: %v", err)
-	}
-	defer rows.Close()
-
-	var output []string
-	for rows.Next() {
-		var line string
-		if err := rows.Scan(&line); err == nil {
-			output = append(output, line)
-		}
-	}
-	explainPlan := strings.Join(output, "\n")
-	//fmt.Printf("Explain plan calculated: %s\n", explainPlan)
-	return explainPlan
-}
-
-func WriteSingleRecordTimingCSV(
-	run int,
-	recordIndex int,
-	duration time.Duration,
-	stepTimings []StepTiming,
-	outputPath string,
-	writeHeader bool,
-) error {
-	var file *os.File
-	var err error
-
-	if writeHeader {
-		file, err = os.Create(outputPath)
-	} else {
-		file, err = os.OpenFile(outputPath, os.O_APPEND|os.O_WRONLY, 0644)
-	}
-	if err != nil {
-		return fmt.Errorf("failed to open CSV file: %w", err)
-	}
-	defer file.Close()
-
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
-
-	if writeHeader {
-		header := []string{"run", "record_index", "record_duration_ms", "step_label", "step_duration_ms", "sql", "vars", "explain"}
-		if err := writer.Write(header); err != nil {
-			return fmt.Errorf("failed to write header: %w", err)
-		}
-	}
-
-	for _, step := range stepTimings {
-		row := []string{
-			strconv.Itoa(run),
-			strconv.Itoa(recordIndex),
-			fmt.Sprintf("%.3f", duration.Seconds()*1000),
-			step.Label,
-			fmt.Sprintf("%.3f", step.Duration.Seconds()*1000),
-			step.SQL,
-			fmt.Sprintf("%v", step.Vars),
-			step.Explain,
-		}
-		if err := writer.Write(row); err != nil {
-			return fmt.Errorf("failed to write row: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func openCSVWithDateSuffix(filePath string) (*os.File, error) {
-	// Extract base name and extension
-	ext := filepath.Ext(filePath)
-	base := strings.TrimSuffix(filepath.Base(filePath), ext)
-	dir := filepath.Dir(filePath)
-
-	// Append today's date
-	dateSuffix := time.Now().Format("2006-01-02")
-	fileName := fmt.Sprintf("%s_%s%s", base, dateSuffix, ext)
-	fullPath := filepath.Join(dir, fileName)
-
-	// Open or create file in append mode
-	file, err := os.OpenFile(fullPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		return nil, fmt.Errorf("❌ Failed to open or create CSV file: %w", err)
-	}
-	return file, nil
-}
-
-func ProcessRecordOption1Instrumented(tx *gorm.DB, rec InputRecord) ([]StepTiming, error) {
-	timings := []StepTiming{}
-
-	query := tx.Session(&gorm.Session{DryRun: true}).Table("representation_references_option1 AS r1").
-		Joins("JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id").
-		Where("r1.local_resource_id = ? AND r1.reporter_type = ? AND r1.resource_type = ? AND r1.reporter_instance_id = ?",
-			rec.LocalResourceID, rec.ReporterType, rec.ResourceType, rec.ReporterInstanceID).
-		Select("r2.*")
-	_ = query.Find(&[]models.RepresentationReference{})
-
-	sql := query.Statement.SQL.String()
-	vars := query.Statement.Vars
-
-	var refs []models.RepresentationReference
-	t0 := time.Now()
-	err := tx.Table("representation_references_option1 AS r1").
-		Joins("JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id").
-		Where("r1.local_resource_id = ? AND r1.reporter_type = ? AND r1.resource_type = ? AND r1.reporter_instance_id = ?",
-			rec.LocalResourceID, rec.ReporterType, rec.ResourceType, rec.ReporterInstanceID).
-		Select("r2.*").
-		Scan(&refs).Error
-
-	timings = append(timings, StepTiming{
-		Label:    "select_refs_join",
-		SQL:      sql,
-		Duration: time.Since(t0),
-		Explain:  GetExplainPlan(tx, sql, vars),
-		Vars:     vars,
-	})
-	if err != nil {
-		return timings, err
-	}
-
-	if len(refs) == 0 {
-
-		resourceID := uuid.New()
-		res := models.Resource{
-			ID:   resourceID,
-			Type: rec.ResourceType,
-		}
-		dry := tx.Session(&gorm.Session{DryRun: true}).Create(&res)
-		vars = dry.Statement.Vars
-		sql = dry.Statement.SQL.String()
-		//fmt.Printf("  vars: %s\n", len(vars))
-		//fmt.Printf("  sql: %s\n", sql)
-		t0 = time.Now()
-		err = tx.Create(&res).Error
-		timings = append(timings, StepTiming{
-			Label:    "insert_resource",
-			SQL:      sql,
-			Duration: time.Since(t0),
-			Vars:     vars,
-			Explain:  GetExplainPlan(tx, sql, vars),
-		})
-		if err != nil {
-			return timings, err
-		}
-
-		refsToCreate := []models.RepresentationReference{
-			{ResourceID: resourceID, LocalResourceID: rec.LocalResourceID, ReporterType: rec.ReporterType,
-				ReporterInstanceID: rec.ReporterInstanceID, ResourceType: rec.ResourceType, RepresentationVersion: 1,
-				Generation: 1, Tombstone: false},
-			{ResourceID: resourceID, LocalResourceID: resourceID.String(), ReporterType: "inventory",
-				RepresentationVersion: 1, Generation: 1, Tombstone: false},
-		}
-
-		dry = tx.Session(&gorm.Session{DryRun: true}).Create(&refsToCreate)
-		sql = dry.Statement.SQL.String()
-		vars = dry.Statement.Vars
-		//fmt.Printf("  vars: %s\n", len(vars))
-		//fmt.Printf("  sql: %s\n", sql)
-		t0 = time.Now()
-		err = tx.Create(&refsToCreate).Error
-		timings = append(timings, StepTiming{
-			Label:    "insert_refs",
-			SQL:      sql,
-			Duration: time.Since(t0),
-			Vars:     vars,
-			Explain:  GetExplainPlan(tx, sql, vars),
-		})
-		if err != nil {
-			return timings, err
-		}
-
-		var commonData datatypes.JSON
-		if rec.Common == nil || len(rec.Common) == 0 {
-			defaultCommon := map[string]string{"workspaceId": "default"}
-			bytes, _ := json.Marshal(defaultCommon)
-			commonData = bytes
-		} else {
-			commonData = datatypes.JSON(rec.Common)
-		}
-
-		commonRep := &models.CommonRepresentation{
-			BaseRepresentation: models.BaseRepresentation{
-				Data: commonData,
-			},
-			LocalResourceID: resourceID.String(), ReporterType: "inventory",
-			ResourceType: rec.ResourceType, Version: 1,
-		}
-
-		dry = tx.Session(&gorm.Session{DryRun: true}).Create(commonRep)
-		sql = dry.Statement.SQL.String()
-		vars = dry.Statement.Vars
-		//fmt.Printf("  vars: %s\n", len(vars))
-		//fmt.Printf("  sql: %s\n", sql)
-		t0 = time.Now()
-		err = tx.Create(commonRep).Error
-		timings = append(timings, StepTiming{
-			Label:    "insert_common_rep",
-			SQL:      sql,
-			Duration: time.Since(t0),
-			Vars:     vars,
-			Explain:  GetExplainPlan(tx, sql, vars),
-		})
-		if err != nil {
-			return timings, err
-		}
-
-		var reporterData datatypes.JSON
-		if rec.Reporter == nil || len(rec.Reporter) == 0 {
-			reporterData = []byte(`{}`)
-		} else {
-			reporterData = datatypes.JSON(rec.Reporter)
-		}
-
-		reporterRep := &models.ReporterRepresentation{
-			BaseRepresentation: models.BaseRepresentation{
-				Data: reporterData,
-			},
-			LocalResourceID: rec.LocalResourceID, ReporterType: rec.ReporterType,
-			ResourceType: rec.ResourceType, Version: 1,
-			ReporterVersion: rec.ReporterVersion, ReporterInstanceID: rec.ReporterInstanceID,
-			APIHref: rec.APIHref, ConsoleHref: rec.ConsoleHref, CommonVersion: 1,
-			Tombstone: false, Generation: 1,
-		}
-		t0 = time.Now()
-		dry = tx.Session(&gorm.Session{DryRun: true}).Create(reporterRep)
-		sql = dry.Statement.SQL.String()
-		vars = dry.Statement.Vars
-		//fmt.Printf("  vars: %s\n", len(vars))
-		//fmt.Printf("  sql: %s\n", sql)
-		err = tx.Create(reporterRep).Error
-		timings = append(timings, StepTiming{
-			Label:    "insert_reporter_rep",
-			SQL:      sql,
-			Duration: time.Since(t0),
-			Vars:     vars,
-			Explain:  GetExplainPlan(tx, sql, vars),
-		})
-		if err != nil {
-			return timings, err
-		}
-	} else {
-		var commonVersion int
-		var reporterVersion int
-
-		for _, ref := range refs {
-			if ref.ReporterType == "inventory" {
-				commonVersion = ref.RepresentationVersion
-			} else if ref.ReporterType == rec.ReporterType {
-				reporterVersion = ref.RepresentationVersion
-			}
-		}
-		// Update case: bump version and generation
-		for _, ref := range refs {
-			ref.RepresentationVersion++
-			if ref.ReporterType == "inventory" {
-				if rec.Common != nil {
-					newCommonVersion := commonVersion + 1
-					commonRep := &models.CommonRepresentation{
-						BaseRepresentation: models.BaseRepresentation{
-
-							Data: datatypes.JSON(rec.Common),
-						},
-						LocalResourceID: refs[0].ResourceID.String(),
-						ReporterType:    "inventory",
-						ResourceType:    rec.ResourceType,
-						Version:         ref.RepresentationVersion,
-					}
-					dry := tx.Session(&gorm.Session{DryRun: true}).Create(commonRep)
-					sql = dry.Statement.SQL.String()
-					vars = dry.Statement.Vars
-					//fmt.Printf("  vars: %s\n", len(vars))
-					//fmt.Printf("  sql: %s\n", sql)
-					t0 = time.Now()
-					err = tx.Create(commonRep).Error
-					timings = append(timings, StepTiming{
-						Label:    "insert_common_rep",
-						SQL:      sql,
-						Duration: time.Since(t0),
-						Vars:     vars,
-						Explain:  GetExplainPlan(tx, sql, vars),
-					})
-					if err != nil {
-						return timings, err
-					}
-
-					updateRepRef := tx.Session(&gorm.Session{DryRun: true}).Model(&models.RepresentationReference{}).
-						Where("resource_id = ? AND reporter_type = ?", refs[0].ResourceID, "inventory").
-						Update("representation_version", newCommonVersion)
-					sql = updateRepRef.Statement.SQL.String()
-					vars = updateRepRef.Statement.Vars
-					t0 = time.Now()
-					err = tx.Model(&models.RepresentationReference{}).
-						Where("resource_id = ? AND reporter_type = ?", refs[0].ResourceID, "inventory").
-						Update("representation_version", newCommonVersion).Error
-					timings = append(timings, StepTiming{
-						Label:    "update_common_rep_ref",
-						SQL:      sql,
-						Duration: time.Since(t0),
-						Vars:     vars,
-						Explain:  GetExplainPlan(tx, sql, vars),
-					})
-					if err != nil {
-						return timings, err
-					}
-				}
-			} else {
-				if rec.Reporter != nil {
-					newReporterVersion := reporterVersion + 1
-					reporterRep := &models.ReporterRepresentation{
-						BaseRepresentation: models.BaseRepresentation{
-							Data: datatypes.JSON(rec.Reporter),
-						},
-						LocalResourceID:    rec.LocalResourceID,
-						ReporterType:       rec.ReporterType,
-						ResourceType:       rec.ResourceType,
-						Version:            ref.RepresentationVersion,
-						ReporterVersion:    rec.ReporterVersion,
-						ReporterInstanceID: rec.ReporterInstanceID,
-						APIHref:            rec.APIHref,
-						ConsoleHref:        rec.ConsoleHref,
-						CommonVersion:      refs[0].RepresentationVersion,
-						Tombstone:          false,
-						Generation:         ref.Generation,
-					}
-					dry := tx.Session(&gorm.Session{DryRun: true}).Create(reporterRep)
-					sql = dry.Statement.SQL.String()
-					vars = dry.Statement.Vars
-					//fmt.Printf("  vars: %s\n", len(vars))
-					//fmt.Printf("  sql: %s\n", sql)
-					t0 = time.Now()
-					err = tx.Create(reporterRep).Error
-
-					timings = append(timings, StepTiming{
-						Label:    "insert_reporter_rep",
-						SQL:      sql,
-						Duration: time.Since(t0),
-						Vars:     vars,
-						Explain:  GetExplainPlan(tx, sql, vars),
-					})
-					if err != nil {
-						return timings, err
-					}
-
-					// Update representation_reference
-
-					updateRepRef := tx.Session(&gorm.Session{DryRun: true}).Model(&models.RepresentationReference{}).
-						Where("resource_id = ? AND reporter_type = ? AND local_resource_id = ?", refs[0].ResourceID, rec.ReporterType, rec.LocalResourceID).
-						Update("representation_version", newReporterVersion)
-					sql = updateRepRef.Statement.SQL.String()
-					vars = updateRepRef.Statement.Vars
-					t0 = time.Now()
-					err = tx.Model(&models.RepresentationReference{}).
-						Where("resource_id = ? AND reporter_type = ? AND local_resource_id = ?", refs[0].ResourceID, rec.ReporterType, rec.LocalResourceID).
-						Update("representation_version", newReporterVersion).Error
-					timings = append(timings, StepTiming{
-						Label:    "update_reporter_rep_ref",
-						SQL:      sql,
-						Duration: time.Since(t0),
-						Vars:     vars,
-						Explain:  GetExplainPlan(tx, sql, vars),
-					})
-					if err != nil {
-						return timings, err
-					}
-				}
-			}
-		}
-	}
-
-	return timings, nil
 }
 
 func ProcessRecordOption3(tx *gorm.DB, rec InputRecord) error {
@@ -638,4 +234,239 @@ func ProcessRecordOption3(tx *gorm.DB, rec InputRecord) error {
 	}
 
 	return nil
+}
+
+func GetExplainPlan(tx *gorm.DB, sql string, vars []interface{}) string {
+	//explainSQL := "EXPLAIN (ANALYZE, BUFFERS) " + sql
+	explainSQL := "EXPLAIN " + sql
+	rows, err := tx.Raw(explainSQL, vars...).Rows()
+	if err != nil {
+		return fmt.Sprintf("❌ failed to get explain: %v", err)
+	}
+	defer rows.Close()
+
+	var output []string
+	for rows.Next() {
+		var line string
+		if err := rows.Scan(&line); err == nil {
+			output = append(output, line)
+		}
+	}
+	explainPlan := strings.Join(output, "\n")
+	//fmt.Printf("Explain plan calculated: %s\n", explainPlan)
+	return explainPlan
+}
+
+func WriteCSVAllRecords(
+	run int,
+	durations []time.Duration,
+	allStepTimings [][]StepTiming,
+	outputPath string,
+) error {
+	// Check if file exists and is empty
+	writeHeader := false
+	fileInfo, err := os.Stat(outputPath)
+	if os.IsNotExist(err) {
+		writeHeader = true
+	} else if err != nil {
+		return fmt.Errorf("failed to stat file: %w", err)
+	} else if fileInfo.Size() == 0 {
+		writeHeader = true
+	}
+
+	var file *os.File
+	if writeHeader {
+		file, err = os.Create(outputPath)
+	} else {
+		file, err = os.OpenFile(outputPath, os.O_APPEND|os.O_WRONLY, 0644)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to open CSV file: %w", err)
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	if writeHeader {
+		header := []string{"run", "record_index", "record_duration_ms", "step_label", "step_duration_ms", "sql", "vars", "explain"}
+		if err := writer.Write(header); err != nil {
+			return fmt.Errorf("failed to write header: %w", err)
+		}
+	}
+
+	for i, stepTimings := range allStepTimings {
+		duration := durations[i]
+		for _, step := range stepTimings {
+			row := []string{
+				strconv.Itoa(run),
+				strconv.Itoa(i),
+				fmt.Sprintf("%.3f", duration.Seconds()*1000),
+				step.Label,
+				fmt.Sprintf("%.3f", step.Duration.Seconds()*1000),
+				step.SQL,
+				fmt.Sprintf("%v", step.Vars),
+				step.Explain,
+			}
+			if err := writer.Write(row); err != nil {
+				return fmt.Errorf("failed to write row: %w", err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func AnalyzeRun(durations []time.Duration, allStepTimings [][]StepTiming, run int, records []InputRecord, totalElapsed time.Duration) (time.Duration, time.Duration, time.Duration, time.Duration, StepTiming) {
+	sort.Slice(durations, func(i, j int) bool { return durations[i] < durations[j] })
+	getPercentile := func(p float64) time.Duration {
+		index := int(float64(len(durations)) * p)
+		if index >= len(durations) {
+			index = len(durations) - 1
+		}
+		return durations[index]
+	}
+
+	p50 := getPercentile(0.50)
+	p90 := getPercentile(0.90)
+	p99 := getPercentile(0.99)
+	maxIndex := len(durations) - 1
+	maxTime := durations[maxIndex]
+	maxTimings := allStepTimings[maxIndex]
+
+	var maxStep StepTiming
+	for _, step := range maxTimings {
+		if step.Duration > maxStep.Duration {
+			maxStep = step
+		}
+	}
+
+	fmt.Printf("\n📊 Run %d: Processed %d records in %s\n", run, len(records), totalElapsed)
+	fmt.Printf("⏱️ Per-record latency:\n")
+	fmt.Printf("  - p50: %s\n", p50)
+	fmt.Printf("  - p90: %s\n", p90)
+	fmt.Printf("  - p99: %s\n", p99)
+	fmt.Printf("  - maxTime: %s (%s)\n", maxTime, maxStep.Label)
+	//fmt.Printf("  - maxStep Explain:%s\n", maxStep.Explain)
+	return p50, p90, p99, maxTime, maxStep
+}
+
+func ExecuteRun(cfg config.DBConfig, t *testing.T, records []InputRecord, durations []time.Duration, allStepTimings [][]StepTiming, transaction func(*gorm.DB, InputRecord) ([]StepTiming, error)) (time.Duration, []time.Duration, [][]StepTiming, error) {
+	if err := config.DropAndRecreateDatabase(cfg); err != nil {
+		t.Fatalf("❌ failed to reset DB: %v", err)
+	}
+
+	db := config.ConnectDB()
+	sqlDB, err := db.DB()
+
+	defer func(sqlDB *sql.DB) {
+		err := sqlDB.Close()
+		if err != nil {
+
+		}
+	}(sqlDB)
+	// Reinitialize extensions if needed (like uuid-ossp or pgcrypto)
+	// db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"")
+
+	// GORM auto-migration to recreate tables
+	err = db.AutoMigrate(
+		&models.Resource{},
+		&models.CommonRepresentation{},
+		&models.ReporterRepresentation{},
+		&models.RepresentationReference{},
+	)
+
+	if err != nil {
+		return 0, nil, nil, err
+	}
+
+	startTotal := time.Now()
+	for i, rec := range records {
+		start := time.Now()
+		stepTimings, err := runInstrumentedTransaction(db, rec, transaction)
+		duration := time.Since(start)
+
+		durations = append(durations, duration)
+		allStepTimings = append(allStepTimings, stepTimings)
+
+		if err != nil {
+			t.Errorf("record %d transaction failed: %v", i, err)
+		}
+	}
+	totalElapsed := time.Since(startTotal)
+	return totalElapsed, durations, allStepTimings, err
+}
+
+func runInstrumentedTransaction(db *gorm.DB, rec InputRecord, transaction func(*gorm.DB, InputRecord) ([]StepTiming, error)) ([]StepTiming, error) {
+	var timings []StepTiming
+	var innerErr error
+
+	err := db.Transaction(func(tx *gorm.DB) error {
+		timingsResult, err := transaction(tx, rec)
+		if err != nil {
+			innerErr = err
+			return err
+		}
+		timings = timingsResult
+		return nil
+	}, &sql.TxOptions{Isolation: sql.LevelSerializable})
+
+	if err != nil {
+		return timings, err
+	}
+	return timings, innerErr
+}
+
+func WriteCSVForRun(run int, total time.Duration, p50, p90, p99, max time.Duration, count int, maxStep StepTiming, filePath string, writeHeaders bool) {
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		fmt.Printf("❌ Failed to open CSV: %v\n", err)
+		return
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	if writeHeaders {
+		writer.Write([]string{"Run no", "Timestamp", "TotalTime", "P50", "P90", "P99", "MaxTime", "RecordCount", "MaxStepLabel", "MaxStepSQL", "MaxStepExplainPlan"})
+	}
+
+	record := []string{
+		fmt.Sprintf("%d", run),
+		time.Now().Format("2006-01-02 15:04:05"),
+		total.String(),
+		p50.String(),
+		p90.String(),
+		p99.String(),
+		max.String(),
+		fmt.Sprintf("%d", count),
+		maxStep.Label,
+		maxStep.SQL,
+		maxStep.Explain,
+	}
+
+	err = writer.Write(record)
+	if err != nil {
+		return
+	}
+}
+
+func openCSVWithDateSuffix(filePath string) (*os.File, error) {
+	// Extract base name and extension
+	ext := filepath.Ext(filePath)
+	base := strings.TrimSuffix(filepath.Base(filePath), ext)
+	dir := filepath.Dir(filePath)
+
+	// Append today's date
+	dateSuffix := time.Now().Format("2006-01-02")
+	fileName := fmt.Sprintf("%s_%s%s", base, dateSuffix, ext)
+	fullPath := filepath.Join(dir, fileName)
+
+	// Open or create file in append mode
+	file, err := os.OpenFile(fullPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("❌ Failed to open or create CSV file: %w", err)
+	}
+	return file, nil
 }

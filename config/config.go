@@ -3,7 +3,6 @@ package config
 import (
 	"database/sql"
 	"fmt"
-	"github.com/yourusername/go-db-bench/db/schemas/option1_denormalized_reference_2_rep_tables/models"
 	"log"
 	"os"
 
@@ -99,78 +98,4 @@ func ConnectDB() *gorm.DB {
 	}
 
 	return db
-}
-
-func ResetDatabase(db *gorm.DB) error {
-
-	err := ResetSchema(db)
-	if err != nil {
-		return err
-	}
-
-	err = ResetSessionConfig(db)
-	if err != nil {
-		return err
-	}
-
-	err = ConfirmNoTables(db)
-	if err != nil {
-		return err
-	}
-
-	// GORM auto-migration to recreate tables
-	err = db.AutoMigrate(
-		&models.Resource{},
-		&models.CommonRepresentation{},
-		&models.ReporterRepresentation{},
-		&models.RepresentationReference{},
-	)
-	if err != nil {
-		return err
-	}
-	return err
-}
-
-func ResetSchema(db *gorm.DB) error {
-	// Optional: Drop schema (PostgreSQL syntax)
-	if err := db.Exec("DROP SCHEMA public CASCADE").Error; err != nil {
-		return err
-	}
-
-	if err := db.Exec("CREATE SCHEMA public").Error; err != nil {
-		return err
-	}
-	fmt.Println("✅ Dropped and recreated public schema")
-
-	return nil
-}
-
-func ResetSessionConfig(db *gorm.DB) error {
-	// Optional: reset planner/session settings
-	err := db.Exec(`DISCARD ALL;`).Error
-	if err != nil {
-		return err
-	}
-	fmt.Println("✅ DISCARD ALL executed")
-	err = db.Exec("RESET ALL").Error
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("✅ RESET ALL executed")
-	return err
-}
-
-func ConfirmNoTables(db *gorm.DB) error {
-	// Confirm clean
-	var tables []string
-	if err := db.Raw(`SELECT tablename FROM pg_tables WHERE schemaname = 'public'`).Scan(&tables).Error; err != nil {
-		return fmt.Errorf("failed to query tables: %w", err)
-	}
-	if len(tables) > 0 {
-		return fmt.Errorf("❌ tables still exist after reset: %v", tables)
-	}
-	fmt.Println("✅ Verified: no user-defined tables remain")
-
-	return nil
 }
