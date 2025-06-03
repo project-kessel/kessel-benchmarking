@@ -45,12 +45,6 @@ func DropAndRecreateDatabase(cfg DBConfig) error {
 	}
 	defer adminDB.Close()
 
-	// Terminate any active connections
-	_, _ = adminDB.Exec(`
-		SELECT pg_terminate_backend(pid)
-		FROM pg_stat_activity
-		WHERE datname = $1 AND pid <> pg_backend_pid();`, cfg.DBName)
-
 	// Safely quote the DB name
 	quotedDBName := fmt.Sprintf(`"%s"`, cfg.DBName)
 

@@ -400,14 +400,12 @@ func ExecuteRun(cfg config.DBConfig, t *testing.T, records []InputRecord, durati
 	db := config.ConnectDB()
 	sqlDB, err := db.DB()
 
-	defer func(sqlDB *sql.DB) {
+	defer func() {
 		err := sqlDB.Close()
 		if err != nil {
 
 		}
-	}(sqlDB)
-	// Reinitialize extensions if needed (like uuid-ossp or pgcrypto)
-	// db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"")
+	}()
 
 	// GORM auto-migration to recreate tables
 	err = db.AutoMigrate(
