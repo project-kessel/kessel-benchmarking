@@ -2,7 +2,6 @@ package regular_tests
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/yourusername/go-db-bench/db/schemas/option1_denormalized_reference_2_rep_tables/models"
 	"gorm.io/datatypes"
@@ -16,8 +15,8 @@ import (
 var runCount = 10
 
 const inputRecordsPath = "input_100000_records.jsonl"
-const outputCSVPath = "per_run_results_option1_100000_with_search_index.csv"
-const outputPerRecordCSVPath = "per_record_results_option1_100000_with_search_index.csv"
+const outputCSVPath = "per_run_results_option1_100000_without_search_index.csv"
+const outputPerRecordCSVPath = "per_record_results_option1_100000_without_search_index.csv"
 const explain = false
 
 func TestDenormalizedRefs2RepTables(t *testing.T) {
@@ -312,7 +311,7 @@ func updateReporterRepresentationVersion(
 	newVersion int,
 	dryRun bool,
 ) *gorm.DB {
-	fmt.Printf("Reporter Rep to update: %d\n", newVersion)
+	//fmt.Printf("Reporter Rep to update: %d\n", newVersion)
 	session := tx.Session(&gorm.Session{DryRun: dryRun})
 	query := session.Model(&models.RepresentationReference{}).
 		Where("resource_id = ? AND reporter_type = ? AND local_resource_id = ?", resourceID, reporterType, localResourceID).
@@ -321,7 +320,7 @@ func updateReporterRepresentationVersion(
 }
 
 func insertReporterRepresentation(tx *gorm.DB, reporterRep *models.ReporterRepresentation, dryRun bool) *gorm.DB {
-	fmt.Printf("Reporter Rep to Insert: %+v\n", reporterRep.Version)
+	//fmt.Printf("Reporter Rep to Insert: %+v\n", reporterRep.Version)
 	return tx.Session(&gorm.Session{DryRun: dryRun}).Create(reporterRep)
 }
 
