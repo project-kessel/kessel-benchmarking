@@ -3,6 +3,7 @@ package input_files
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"math/rand"
 	"os"
 	"sort"
@@ -16,15 +17,15 @@ type idCountPair struct {
 }
 
 type Record struct {
-	ResourceType       string            `json:"resource_type"`
-	ReporterType       string            `json:"reporter_type"`
-	ReporterInstanceID string            `json:"reporter_instance_id"`
-	LocalResourceID    string            `json:"local_resource_id"`
-	APIHref            string            `json:"api_href"`
-	ConsoleHref        string            `json:"console_href"`
-	ReporterVersion    string            `json:"reporter_version"`
-	Common             map[string]string `json:"common,omitempty"`
-	Reporter           map[string]string `json:"reporter,omitempty"`
+	ResourceType       string                 `json:"resource_type"`
+	ReporterType       string                 `json:"reporter_type"`
+	ReporterInstanceID string                 `json:"reporter_instance_id"`
+	LocalResourceID    string                 `json:"local_resource_id"`
+	APIHref            string                 `json:"api_href"`
+	ConsoleHref        string                 `json:"console_href"`
+	ReporterVersion    string                 `json:"reporter_version"`
+	Common             map[string]string      `json:"common,omitempty"`
+	Reporter           map[string]interface{} `json:"reporter,omitempty"`
 }
 
 func Categorize(idNum uint64) string {
@@ -41,6 +42,36 @@ func Categorize(idNum uint64) string {
 		return "cat5"
 	default:
 		return "cat6"
+	}
+}
+
+func generateK8sClusterReporter() map[string]interface{} {
+	return map[string]interface{}{
+		"external_cluster_id": randomString(8),
+		"cluster_status":      "READY",
+		"kube_version":        fmt.Sprintf("1.%d", rand.Intn(10)+20),
+		"kube_vendor":         "OPENSHIFT",
+		"vendor_version":      fmt.Sprintf("4.%d", rand.Intn(20)+1),
+		"cloud_platform":      "AWS_UPI",
+		"nodes": []map[string]interface{}{
+			{
+				"name":   fmt.Sprintf("%s.example.com", randomString(6)),
+				"cpu":    fmt.Sprintf("%dm", rand.Intn(10000)),
+				"memory": fmt.Sprintf("%dKi", rand.Intn(40000000)),
+				"labels": []map[string]string{
+					{"key": "has_monster_gpu", "value": "yes"},
+				},
+			},
+		},
+	}
+}
+
+func generateHostReporter() map[string]interface{} {
+	return map[string]interface{}{
+		"satellite_id":          uuid.New().String(),
+		"sub_manager_id":        uuid.New().String(),
+		"insights_inventory_id": uuid.New().String(),
+		"ansible_host":          fmt.Sprintf("host-%d", rand.Intn(100)),
 	}
 }
 
@@ -78,10 +109,10 @@ func GenerateZipfIDsWithModuloCategory(n int, zipfMax uint64, modBase uint64, s,
 		switch cat {
 		case "cat1":
 			record.ReporterType = "hbi"
-			record.Reporter = map[string]string{"insightsId": randomString(6)}
+			record.Reporter = generateHostReporter()
 		case "cat2":
 			record.ReporterType = "acm"
-			record.Reporter = map[string]string{"clusterId": randomString(6)}
+			record.Reporter = generateK8sClusterReporter()
 		case "cat3":
 			record.ReporterType = "hbi"
 			record.Common = map[string]string{"workspaceId": randomString(6)}
@@ -90,11 +121,11 @@ func GenerateZipfIDsWithModuloCategory(n int, zipfMax uint64, modBase uint64, s,
 			record.Common = map[string]string{"workspaceId": randomString(6)}
 		case "cat5":
 			record.ReporterType = "hbi"
-			record.Reporter = map[string]string{"insightsId": randomString(6)}
+			record.Reporter = generateHostReporter()
 			record.Common = map[string]string{"workspaceId": randomString(6)}
 		case "cat6":
 			record.ReporterType = "acm"
-			record.Reporter = map[string]string{"clusterId": randomString(6)}
+			record.Reporter = generateK8sClusterReporter()
 			record.Common = map[string]string{"workspaceId": randomString(6)}
 		}
 

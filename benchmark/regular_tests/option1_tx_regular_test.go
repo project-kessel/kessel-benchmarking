@@ -15,9 +15,9 @@ import (
 
 var runCount = 10
 
-const inputRecordsPath = "input_10_records.jsonl"
-const outputCSVPath = "per_run_results_option1_10_after_search_index.csv"
-const outputPerRecordCSVPath = "per_record_results_option1_10_after_search_index.csv"
+const inputRecordsPath = "input_100000_records.jsonl"
+const outputCSVPath = "per_run_results_option1_100000_with_search_index.csv"
+const outputPerRecordCSVPath = "per_record_results_option1_100000_with_search_index.csv"
 const explain = false
 
 func TestDenormalizedRefs2RepTables(t *testing.T) {

@@ -468,17 +468,17 @@ func WriteCSVForRun(run int, total time.Duration, p50, p90, p99, max time.Durati
 	defer writer.Flush()
 
 	if writeHeaders {
-		writer.Write([]string{"Run no", "Timestamp", "TotalTime", "P50", "P90", "P99", "MaxTime", "RecordCount", "MaxStepLabel", "MaxStepSQL", "MaxStepExplainPlan"})
+		writer.Write([]string{"Run no", "Timestamp", "TotalTime ms", "P50ns", "P90ns", "P99ns", "MaxTime ns", "RecordCount", "MaxStepLabel", "MaxStepSQL", "MaxStepExplainPlan"})
 	}
 
 	record := []string{
 		fmt.Sprintf("%d", run),
 		time.Now().Format("2006-01-02 15:04:05"),
-		total.String(),
-		p50.String(),
-		p90.String(),
-		p99.String(),
-		max.String(),
+		fmt.Sprintf("%d", total.Milliseconds()),
+		fmt.Sprintf("%d", p50.Nanoseconds()),
+		fmt.Sprintf("%d", p90.Nanoseconds()),
+		fmt.Sprintf("%d", p99.Nanoseconds()),
+		fmt.Sprintf("%d", max.Nanoseconds()),
 		fmt.Sprintf("%d", count),
 		maxStep.Label,
 		maxStep.SQL,

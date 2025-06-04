@@ -1,6 +1,1 @@
-{"resource_type":"host","reporter_type":"acm","reporter_instance_id":"abc","local_resource_id":"5","api_href":"www.example.com","console_href":"www.example.com","reporter_version":"123.2","reporter":{"clusterId":"6J9eXQ"}}
-{"resource_type":"host","reporter_type":"acm","reporter_instance_id":"abc","local_resource_id":"5","api_href":"www.example.com","console_href":"www.example.com","reporter_version":"123.2","reporter":{"clusterId":"Z2avhw"}}
-{"resource_type":"host","reporter_type":"acm","reporter_instance_id":"abc","local_resource_id":"4","api_href":"www.example.com","console_href":"www.example.com","reporter_version":"123.2","reporter":{"clusterId":"j1iOJ0"}}
 {"resource_type":"host","reporter_type":"acm","reporter_instance_id":"abc","local_resource_id":"9","api_href":"www.example.com","console_href":"www.example.com","reporter_version":"123.2","common":{"workspaceId":"GKk3bK"},"reporter":{"clusterId":"jh25VM"}}
-{"resource_type":"host","reporter_type":"hbi","reporter_instance_id":"abc","local_resource_id":"2","api_href":"www.example.com","console_href":"www.example.com","reporter_version":"123.2","reporter":{"insightsId":"FiX1X5"}}
-{"resource_type":"host","reporter_type":"hbi","reporter_instance_id":"abc","local_resource_id":"2","api_href":"www.example.com","console_href":"www.example.com","reporter_version":"123.2","reporter":{"insightsId":"k4MwJC"}}

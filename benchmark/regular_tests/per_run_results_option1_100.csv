@@ -1,3 +1,11 @@
-Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
-2025-06-01 12:38:57,404.372625ms,3.104458ms,6.907792ms,16.442917ms,16.442917ms,100,insert_resource,"INSERT INTO ""resources_option1"" (""id"",""type"") VALUES ($1,$2)","Insert on resources_option1  (cost=0.00..0.01 rows=0 width=0)
-  ->  Result  (cost=0.00..0.01 rows=1 width=290)"
+Run no,Timestamp,TotalTime,P50,P90,P99,MaxTime,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-03 15:29:18,137.394833ms,964.334µs,1.773625ms,16.32225ms,16,100,select_refs_join,,
+2,2025-06-03 15:29:18,105.093208ms,804.791µs,1.349125ms,11.72975ms,11,100,select_refs_join,,
+3,2025-06-03 15:29:19,101.974667ms,815.25µs,1.669209ms,9.818083ms,9,100,insert_refs,,
+4,2025-06-03 15:29:19,108.268625ms,903.542µs,1.427958ms,8.879625ms,8,100,insert_common_rep,,
+5,2025-06-03 15:29:19,109.105541ms,845.083µs,1.568166ms,9.889875ms,9,100,select_refs_join,,
+6,2025-06-03 15:29:19,93.914208ms,777.916µs,1.188459ms,10.121875ms,10,100,select_refs_join,,
+7,2025-06-03 15:29:20,101.761708ms,810.583µs,1.347041ms,10.183042ms,10,100,select_refs_join,,
+8,2025-06-03 15:29:20,113.733583ms,862.209µs,1.362917ms,18.841167ms,18,100,insert_refs,,
+9,2025-06-03 15:29:20,138.70575ms,806.042µs,2.129167ms,8.671334ms,8,100,insert_refs,,
+10,2025-06-03 15:29:20,91.000625ms,762.75µs,1.116667ms,9.916667ms,9,100,insert_refs,,

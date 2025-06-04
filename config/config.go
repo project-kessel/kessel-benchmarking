@@ -33,6 +33,18 @@ func LoadDBConfig() DBConfig {
 	}
 }
 
+func terminateConnections(db *gorm.DB, dbName string) error {
+	sql := `
+		SELECT pg_terminate_backend(pid)
+		FROM pg_stat_activity
+		WHERE datname = ? AND pid <> pg_backend_pid();
+	`
+	if err := db.Exec(sql, dbName).Error; err != nil {
+		return fmt.Errorf("failed to terminate connections: %w", err)
+	}
+	return nil
+}
+
 func DropAndRecreateDatabase(cfg DBConfig) error {
 	adminConnStr := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=postgres sslmode=disable",
@@ -43,7 +55,12 @@ func DropAndRecreateDatabase(cfg DBConfig) error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to admin DB: %w", err)
 	}
-	defer adminDB.Close()
+	defer func(adminDB *sql.DB) {
+		err := adminDB.Close()
+		if err != nil {
+			
+		}
+	}(adminDB)
 
 	// Safely quote the DB name
 	quotedDBName := fmt.Sprintf(`"%s"`, cfg.DBName)
