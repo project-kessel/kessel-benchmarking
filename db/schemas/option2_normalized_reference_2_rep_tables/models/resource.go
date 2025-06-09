@@ -8,5 +8,5 @@ type Resource struct {
 }
 
 func (Resource) TableName() string {
-	return "resources_option3"
+	return "resources_option2"
 }

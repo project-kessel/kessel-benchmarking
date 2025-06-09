@@ -1,0 +1,58 @@
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 10:22:11,3,3519459,3519459,3519459,3519459,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 10:24:29,3,3652750,3652750,3652750,3652750,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 10:27:54,3,2866250,2866250,2866250,2866250,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 10:45:09,3,3127250,3127250,3127250,3127250,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 10:54:55,2,2285500,2285500,2285500,2285500,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 11:07:48,1,1796000,1796000,1796000,1796000,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 11:09:25,1,1821000,1821000,1821000,1821000,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 11:10:57,3,3346291,3346291,3346291,3346291,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 11:16:01,2,2489167,2489167,2489167,2489167,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 11:17:25,3,2977541,2977541,2977541,2977541,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 11:19:30,2,2682000,2682000,2682000,2682000,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 11:24:52,3,3680375,3680375,3680375,3680375,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 13:47:01,3,2963584,2963584,2963584,2963584,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 13:47:41,3,3415834,3415834,3415834,3415834,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 13:56:38,3,3171792,3171792,3171792,3171792,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 13:58:32,3,2899833,2899833,2899833,2899833,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 14:06:45,2,2159833,2159833,2159833,2159833,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 14:08:17,3,2934250,2934250,2934250,2934250,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 14:13:26,2,2584458,2584458,2584458,2584458,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 14:53:45,2,2516542,2516542,2516542,2516542,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 14:56:43,3,3455417,3455417,3455417,3455417,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 14:59:00,3,3251667,3251667,3251667,3251667,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 14:59:37,3,3069292,3069292,3069292,3069292,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 15:01:02,2,2324375,2324375,2324375,2324375,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 15:06:36,4,3779125,3779125,3779125,3779125,1,,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 15:40:56,12,11871458,11871458,11871458,11871458,1,select_refs_and_reps_join,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-05 15:49:30,12,12505542,12505542,12505542,12505542,1,select_refs_and_reps_join,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-09 14:06:12,11,11637417,11637417,11637417,11637417,1,select_refs_and_reps_join,,
+Run no,Timestamp,TotalTime ms,P50ns,P90ns,P99ns,MaxTime ns,RecordCount,MaxStepLabel,MaxStepSQL,MaxStepExplainPlan
+1,2025-06-09 14:39:26,9,9822125,9822125,9822125,9822125,1,select_refs_and_reps_join,,

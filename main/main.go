@@ -8,12 +8,12 @@ import (
 
 func main() {
 
-	totalSamples := 100000
+	totalSamples := 100
 	zipfMax := uint64(100) // Zipf can generate values 0–99
 	modBase := uint64(100) // Reduce to 0–99 for category mapping
 	alpha := 1.3
 	xm := 1.0
-	outputPath := "/Users/snehagunta/git/kessel/kessel-benchmarking/benchmark/input_files/input_100000_records.jsonl"
+	outputPath := "/Users/snehagunta/git/kessel/kessel-benchmarking/benchmark/input_files/input_100_records.jsonl"
 	categories := input_files.GenerateZipfIDsWithModuloCategory(totalSamples, zipfMax, modBase, alpha, xm, outputPath)
 
 	// Print summary

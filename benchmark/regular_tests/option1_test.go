@@ -3,20 +3,18 @@ package regular_tests
 import (
 	"encoding/json"
 	"github.com/google/uuid"
+	"github.com/yourusername/go-db-bench/benchmark"
 	"github.com/yourusername/go-db-bench/db/schemas/option1_denormalized_reference_2_rep_tables/models"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"testing"
-	"time"
-
-	"github.com/yourusername/go-db-bench/benchmark"
 )
 
 var runCount = 10
 
-const inputRecordsPath = "input_100000_records.jsonl"
-const outputCSVPath = "per_run_results_option1_100000_without_search_index.csv"
-const outputPerRecordCSVPath = "per_record_results_option1_100000_without_search_index.csv"
+const inputRecordsPath = "input_1000_records.jsonl"
+const outputCSVPath = "per_run_results_option2_1000.csv"
+const outputPerRecordCSVPath = "per_record_results_option2_1000.csv"
 const explain = false
 
 func TestDenormalizedRefs2RepTables(t *testing.T) {
@@ -28,13 +26,13 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec benchmark.InputRecord) ([
 	var results interface{}
 
 	if explain {
-		dryRunAndRecordExplainPlan(tx, timings, func() *gorm.DB {
+		benchmark.DryRunAndRecordExplainPlan(tx, timings, func() *gorm.DB {
 			query, _ := buildSelectRefsQueryOption1(tx, rec, false)
 			return query
 		}, "select_refs_join")
 	} else {
 		var err error
-		timings, err, results = actualRunAndRecordExecutionTiming(tx, timings,
+		timings, err, results = benchmark.ActualRunAndRecordExecutionTiming(tx, timings,
 			func() (*gorm.DB, interface{}) {
 				query, results := buildSelectRefsQueryOption1(tx, rec, false)
 				return query, results
@@ -56,13 +54,13 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec benchmark.InputRecord) ([
 		}
 
 		if explain {
-			timings = dryRunAndRecordExplainPlan(tx, timings,
+			timings = benchmark.DryRunAndRecordExplainPlan(tx, timings,
 				func() *gorm.DB { return insertResource(tx, res, true) },
 				"insert_resource",
 			)
 		} else {
 			var err error
-			timings, err, _ = actualRunAndRecordExecutionTiming(tx, timings,
+			timings, err, _ = benchmark.ActualRunAndRecordExecutionTiming(tx, timings,
 				func() (*gorm.DB, interface{}) { return insertResource(tx, res, false), nil },
 				"insert_resource",
 			)
@@ -80,13 +78,13 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec benchmark.InputRecord) ([
 		}
 
 		if explain {
-			timings = dryRunAndRecordExplainPlan(tx, timings,
+			timings = benchmark.DryRunAndRecordExplainPlan(tx, timings,
 				func() *gorm.DB { return insertRepresentationReferences(tx, refsToCreate, true) },
 				"insert_refs",
 			)
 		} else {
 			var err error
-			timings, err, _ = actualRunAndRecordExecutionTiming(tx, timings,
+			timings, err, _ = benchmark.ActualRunAndRecordExecutionTiming(tx, timings,
 				func() (*gorm.DB, interface{}) { return insertRepresentationReferences(tx, refsToCreate, false), nil },
 				"insert_refs",
 			)
@@ -108,18 +106,20 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec benchmark.InputRecord) ([
 			BaseRepresentation: models.BaseRepresentation{
 				Data: commonData,
 			},
-			LocalResourceID: resourceID.String(), ReporterType: "inventory",
-			ResourceType: rec.ResourceType, Version: 1,
+			LocalResourceID: resourceID.String(),
+			Version:         1,
+			ReporterType:    "inventory",
+			ResourceType:    rec.ResourceType,
 		}
 
 		if explain {
-			timings = dryRunAndRecordExplainPlan(tx, timings,
+			timings = benchmark.DryRunAndRecordExplainPlan(tx, timings,
 				func() *gorm.DB { return insertCommonRepresentation(tx, commonRep, true) },
 				"insert_common_rep",
 			)
 		} else {
 			var err error
-			timings, err, _ = actualRunAndRecordExecutionTiming(tx, timings,
+			timings, err, _ = benchmark.ActualRunAndRecordExecutionTiming(tx, timings,
 				func() (*gorm.DB, interface{}) { return insertCommonRepresentation(tx, commonRep, false), nil },
 				"insert_common_rep",
 			)
@@ -146,13 +146,13 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec benchmark.InputRecord) ([
 			Tombstone: false, Generation: 1,
 		}
 		if explain {
-			timings = dryRunAndRecordExplainPlan(tx, timings,
+			timings = benchmark.DryRunAndRecordExplainPlan(tx, timings,
 				func() *gorm.DB { return insertReporterRepresentation(tx, reporterRep, true) },
 				"insert_reporter_rep",
 			)
 		} else {
 			var err error
-			timings, err, _ = actualRunAndRecordExecutionTiming(tx, timings,
+			timings, err, _ = benchmark.ActualRunAndRecordExecutionTiming(tx, timings,
 				func() (*gorm.DB, interface{}) { return insertReporterRepresentation(tx, reporterRep, false), nil },
 				"insert_reporter_rep",
 			)
@@ -184,18 +184,18 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec benchmark.InputRecord) ([
 							Data: datatypes.JSON(rec.Common),
 						},
 						LocalResourceID: refs[0].ResourceID.String(),
+						Version:         newCommonVersion,
 						ReporterType:    "inventory",
 						ResourceType:    rec.ResourceType,
-						Version:         newCommonVersion,
 					}
 					if explain {
-						timings = dryRunAndRecordExplainPlan(tx, timings,
+						timings = benchmark.DryRunAndRecordExplainPlan(tx, timings,
 							func() *gorm.DB { return insertCommonRepresentation(tx, commonRep, true) },
 							"insert_common_rep",
 						)
 					} else {
 						var err error
-						timings, err, _ = actualRunAndRecordExecutionTiming(tx, timings,
+						timings, err, _ = benchmark.ActualRunAndRecordExecutionTiming(tx, timings,
 							func() (*gorm.DB, interface{}) { return insertCommonRepresentation(tx, commonRep, false), nil },
 							"insert_common_rep",
 						)
@@ -205,7 +205,7 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec benchmark.InputRecord) ([
 					}
 
 					if explain {
-						timings = dryRunAndRecordExplainPlan(
+						timings = benchmark.DryRunAndRecordExplainPlan(
 							tx,
 							timings,
 							func() *gorm.DB {
@@ -214,7 +214,7 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec benchmark.InputRecord) ([
 							"update_reporter_rep_ref")
 					} else {
 						var err error
-						timings, err, _ = actualRunAndRecordExecutionTiming(tx, timings,
+						timings, err, _ = benchmark.ActualRunAndRecordExecutionTiming(tx, timings,
 							func() (*gorm.DB, interface{}) {
 								return updateCommonRepresentationVersion(tx, refs[0].ResourceID, newCommonVersion, false), nil
 							},
@@ -245,13 +245,13 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec benchmark.InputRecord) ([
 						Generation:         ref.Generation,
 					}
 					if explain {
-						timings = dryRunAndRecordExplainPlan(tx, timings,
+						timings = benchmark.DryRunAndRecordExplainPlan(tx, timings,
 							func() *gorm.DB { return insertReporterRepresentation(tx, reporterRep, true) },
 							"insert_reporter_rep",
 						)
 					} else {
 						var err error
-						timings, err, _ = actualRunAndRecordExecutionTiming(tx, timings,
+						timings, err, _ = benchmark.ActualRunAndRecordExecutionTiming(tx, timings,
 							func() (*gorm.DB, interface{}) { return insertReporterRepresentation(tx, reporterRep, false), nil },
 							"insert_reporter_rep",
 						)
@@ -262,7 +262,7 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec benchmark.InputRecord) ([
 
 					// Update representation_reference
 					if explain {
-						timings = dryRunAndRecordExplainPlan(
+						timings = benchmark.DryRunAndRecordExplainPlan(
 							tx,
 							timings,
 							func() *gorm.DB {
@@ -271,7 +271,7 @@ func ProcessRecordOption1Instrumented(tx *gorm.DB, rec benchmark.InputRecord) ([
 							"update_reporter_rep_ref")
 					} else {
 						var err error
-						timings, err, _ = actualRunAndRecordExecutionTiming(tx, timings,
+						timings, err, _ = benchmark.ActualRunAndRecordExecutionTiming(tx, timings,
 							func() (*gorm.DB, interface{}) {
 								query := updateReporterRepresentationVersion(tx, refs[0].ResourceID, rec.ReporterType, rec.LocalResourceID, newReporterVersion, false)
 								return query, nil
@@ -311,7 +311,6 @@ func updateReporterRepresentationVersion(
 	newVersion int,
 	dryRun bool,
 ) *gorm.DB {
-	//fmt.Printf("Reporter Rep to update: %d\n", newVersion)
 	session := tx.Session(&gorm.Session{DryRun: dryRun})
 	query := session.Model(&models.RepresentationReference{}).
 		Where("resource_id = ? AND reporter_type = ? AND local_resource_id = ?", resourceID, reporterType, localResourceID).
@@ -355,39 +354,4 @@ func insertResource(tx *gorm.DB, resource models.Resource, dryRun bool) *gorm.DB
 
 func insertRepresentationReferences(tx *gorm.DB, refsToCreate []models.RepresentationReference, dryRun bool) *gorm.DB {
 	return tx.Session(&gorm.Session{DryRun: dryRun}).Create(&refsToCreate)
-}
-
-func dryRunAndRecordExplainPlan(
-	tx *gorm.DB,
-	timings []benchmark.StepTiming,
-	dryFunc func() *gorm.DB,
-	label string,
-) []benchmark.StepTiming {
-	dry := dryFunc()
-	sql := dry.Statement.SQL.String()
-	vars := dry.Statement.Vars
-
-	timings = append(timings, benchmark.StepTiming{
-		Label:   label,
-		SQL:     sql,
-		Vars:    vars,
-		Explain: benchmark.GetExplainPlan(tx, sql, vars),
-	})
-	return timings
-}
-
-func actualRunAndRecordExecutionTiming(
-	tx *gorm.DB,
-	timings []benchmark.StepTiming,
-	execFunc func() (*gorm.DB, interface{}),
-	label string,
-) ([]benchmark.StepTiming, error, interface{}) {
-	t0 := time.Now()
-	exec, result := execFunc()
-	err := exec.Error
-	timings = append(timings, benchmark.StepTiming{
-		Label:    label,
-		Duration: time.Since(t0),
-	})
-	return timings, err, result
 }

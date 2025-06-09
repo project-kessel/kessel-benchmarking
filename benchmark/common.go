@@ -6,10 +6,9 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/yourusername/go-db-bench/config"
 	"github.com/yourusername/go-db-bench/db/schemas/option1_denormalized_reference_2_rep_tables/models"
-	"gorm.io/datatypes"
+	option2models "github.com/yourusername/go-db-bench/db/schemas/option2_normalized_reference_2_rep_tables/models"
 	"gorm.io/gorm"
 	"os"
 	"path/filepath"
@@ -31,6 +30,7 @@ func RunTestForOption(t *testing.T, option func(*gorm.DB, InputRecord) ([]StepTi
 		fmt.Printf("\n🔁 Starting run %d/%d\n", run, runCount)
 
 		// 1. Load input records from file
+		fmt.Printf("\n🔁 Loading records")
 		records, err := LoadInputRecords("/Users/snehagunta/git/kessel/kessel-benchmarking/benchmark/input_files/" + inputRecordsPath)
 		if err != nil {
 			t.Fatalf("failed to load input records: %v", err)
@@ -103,178 +103,6 @@ type StepTiming struct {
 	Duration time.Duration
 	Explain  string
 	Vars     []interface{}
-}
-
-func ProcessRecordOption3(tx *gorm.DB, rec InputRecord) error {
-	var refs []models.RepresentationReference
-	err := tx.
-		Table("representation_references_option1 AS r1").
-		Joins("JOIN representation_references_option1 AS r2 ON r1.resource_id = r2.resource_id").
-		Where("r1.local_resource_id = ? AND r1.reporter_type = ? AND r1.resource_type = ? AND r1.reporter_instance_id = ?",
-			rec.LocalResourceID, rec.ReporterType, rec.ResourceType, rec.ReporterInstanceID).
-		Select("r2.*").
-		Scan(&refs).Error
-	if err != nil {
-		return err
-	}
-
-	if len(refs) == 0 {
-		// Create new resource
-		resourceID := uuid.New()
-		res := models.Resource{
-			ID:   resourceID,
-			Type: rec.ResourceType,
-		}
-		if err := tx.Create(&res).Error; err != nil {
-			return err
-		}
-
-		// Insert common and reporter representation_references
-		refsToCreate := []models.RepresentationReference{
-			{
-				ResourceID:            resourceID,
-				LocalResourceID:       rec.LocalResourceID,
-				ReporterType:          rec.ReporterType,
-				ReporterInstanceID:    rec.ReporterInstanceID,
-				ResourceType:          rec.ResourceType,
-				RepresentationVersion: 1,
-				Generation:            1,
-				Tombstone:             false,
-			},
-			{
-				ResourceID:            resourceID,
-				LocalResourceID:       resourceID.String(),
-				ReporterType:          "inventory",
-				RepresentationVersion: 1,
-				Generation:            1,
-				Tombstone:             false,
-			},
-		}
-		if err := tx.Create(&refsToCreate).Error; err != nil {
-			return err
-		}
-
-		var commonData datatypes.JSON
-		if rec.Common == nil || len(rec.Common) == 0 {
-			defaultCommon := map[string]string{"workspaceId": "default"}
-			bytes, err := json.Marshal(defaultCommon)
-			if err != nil {
-				return err
-			}
-			commonData = datatypes.JSON(bytes)
-		} else {
-			commonData = datatypes.JSON(rec.Common)
-		}
-
-		// Create representations
-		if err := tx.Create(&models.CommonRepresentation{
-			BaseRepresentation: models.BaseRepresentation{
-				Data: commonData,
-			},
-			LocalResourceID: resourceID.String(),
-			ReporterType:    "inventory",
-			ResourceType:    rec.ResourceType,
-			Version:         1,
-		}).Error; err != nil {
-			return err
-		}
-
-		var reporterData datatypes.JSON
-		if rec.Reporter == nil || len(rec.Reporter) == 0 {
-			reporterData = datatypes.JSON([]byte(`{}`))
-		} else {
-			reporterData = datatypes.JSON(rec.Reporter)
-		}
-
-		if err := tx.Create(&models.ReporterRepresentation{
-			BaseRepresentation: models.BaseRepresentation{
-				Data: reporterData,
-			},
-			LocalResourceID:    rec.LocalResourceID,
-			ReporterType:       rec.ReporterType,
-			ResourceType:       rec.ResourceType,
-			Version:            1,
-			ReporterVersion:    rec.ReporterVersion,
-			ReporterInstanceID: rec.ReporterInstanceID,
-			APIHref:            rec.APIHref,
-			ConsoleHref:        rec.ConsoleHref,
-			CommonVersion:      1,
-			Tombstone:          false,
-			Generation:         1,
-		}).Error; err != nil {
-			return err
-		}
-	} else {
-		var commonVersion int
-		var reporterVersion int
-
-		for _, ref := range refs {
-			if ref.ReporterType == "inventory" {
-				commonVersion = ref.RepresentationVersion
-			} else if ref.ReporterType == rec.ReporterType {
-				reporterVersion = ref.RepresentationVersion
-			}
-		}
-		// Update case: bump version and generation
-		for _, ref := range refs {
-			ref.RepresentationVersion++
-			if ref.ReporterType == "inventory" {
-				if rec.Common != nil {
-					newCommonVersion := commonVersion + 1
-					if err := tx.Create(&models.CommonRepresentation{
-						BaseRepresentation: models.BaseRepresentation{
-
-							Data: datatypes.JSON(rec.Common),
-						},
-						LocalResourceID: refs[0].ResourceID.String(),
-						ReporterType:    "inventory",
-						ResourceType:    rec.ResourceType,
-						Version:         ref.RepresentationVersion,
-					}).Error; err != nil {
-						return err
-					}
-
-					if err := tx.Model(&models.RepresentationReference{}).
-						Where("resource_id = ? AND reporter_type = ?", refs[0].ResourceID, "inventory").
-						Update("representation_version", newCommonVersion).Error; err != nil {
-						return err
-					}
-				}
-			} else {
-				if rec.Reporter != nil {
-					newReporterVersion := reporterVersion + 1
-					if err := tx.Create(&models.ReporterRepresentation{
-						BaseRepresentation: models.BaseRepresentation{
-
-							Data: datatypes.JSON(rec.Reporter),
-						},
-						LocalResourceID:    rec.LocalResourceID,
-						ReporterType:       rec.ReporterType,
-						ResourceType:       rec.ResourceType,
-						Version:            ref.RepresentationVersion,
-						ReporterVersion:    rec.ReporterVersion,
-						ReporterInstanceID: rec.ReporterInstanceID,
-						APIHref:            rec.APIHref,
-						ConsoleHref:        rec.ConsoleHref,
-						CommonVersion:      refs[0].RepresentationVersion,
-						Tombstone:          false,
-						Generation:         ref.Generation,
-					}).Error; err != nil {
-						return err
-					}
-
-					// Update representation_reference
-					if err := tx.Model(&models.RepresentationReference{}).
-						Where("resource_id = ? AND reporter_type = ? AND local_resource_id = ?", refs[0].ResourceID, rec.ReporterType, rec.LocalResourceID).
-						Update("representation_version", newReporterVersion).Error; err != nil {
-						return err
-					}
-				}
-			}
-		}
-	}
-
-	return nil
 }
 
 func GetExplainPlan(tx *gorm.DB, sql string, vars []interface{}) string {
@@ -407,13 +235,28 @@ func ExecuteRun(cfg config.DBConfig, t *testing.T, records []InputRecord, durati
 		}
 	}()
 
+	fmt.Printf("\n🔁 Migrating")
 	// GORM auto-migration to recreate tables
 	err = db.AutoMigrate(
 		&models.Resource{},
 		&models.CommonRepresentation{},
 		&models.ReporterRepresentation{},
 		&models.RepresentationReference{},
+		&option2models.Resource{},
+		&option2models.CommonRepresentation{},
+		&option2models.ReporterRepresentation{},
+		&option2models.RepresentationReference{},
 	)
+
+	db.Exec(`
+	CREATE UNIQUE INDEX IF NOT EXISTS unique_resource_reporter_rep_idx
+	ON representation_reference_option2 (resource_id, reporter_representation_id)
+	WHERE reporter_representation_id IS NOT NULL;`)
+
+	db.Exec(`
+	CREATE UNIQUE INDEX IF NOT EXISTS unique_resource_common_rep_idx
+	ON representation_reference_option2 (resource_id, common_representation_id)
+	WHERE common_representation_id IS NOT NULL;`)
 
 	if err != nil {
 		return 0, nil, nil, err
@@ -437,6 +280,7 @@ func ExecuteRun(cfg config.DBConfig, t *testing.T, records []InputRecord, durati
 }
 
 func runInstrumentedTransaction(db *gorm.DB, rec InputRecord, transaction func(*gorm.DB, InputRecord) ([]StepTiming, error)) ([]StepTiming, error) {
+	//fmt.Printf("\n🔁 Running transaction")
 	var timings []StepTiming
 	var innerErr error
 
@@ -508,4 +352,39 @@ func openCSVWithDateSuffix(filePath string) (*os.File, error) {
 		return nil, fmt.Errorf("❌ Failed to open or create CSV file: %w", err)
 	}
 	return file, nil
+}
+
+func DryRunAndRecordExplainPlan(
+	tx *gorm.DB,
+	timings []StepTiming,
+	dryFunc func() *gorm.DB,
+	label string,
+) []StepTiming {
+	dry := dryFunc()
+	sql := dry.Statement.SQL.String()
+	vars := dry.Statement.Vars
+
+	timings = append(timings, StepTiming{
+		Label:   label,
+		SQL:     sql,
+		Vars:    vars,
+		Explain: GetExplainPlan(tx, sql, vars),
+	})
+	return timings
+}
+
+func ActualRunAndRecordExecutionTiming(
+	tx *gorm.DB,
+	timings []StepTiming,
+	execFunc func() (*gorm.DB, interface{}),
+	label string,
+) ([]StepTiming, error, interface{}) {
+	t0 := time.Now()
+	exec, result := execFunc()
+	err := exec.Error
+	timings = append(timings, StepTiming{
+		Label:    label,
+		Duration: time.Since(t0),
+	})
+	return timings, err, result
 }
