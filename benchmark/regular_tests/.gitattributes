@@ -12,3 +12,4 @@ per_run_results_option1_1000.csv filter=lfs diff=lfs merge=lfs -text
 per_run_results_option1_10000.csv filter=lfs diff=lfs merge=lfs -text
 per_record_results_option1_100.csv filter=lfs diff=lfs merge=lfs -text
 *.csv filter=lfs diff=lfs merge=lfs -text
+*.jsonl filter=lfs diff=lfs merge=lfs -text
