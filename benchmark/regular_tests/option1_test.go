@@ -8,17 +8,18 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"testing"
+	"time"
 )
 
 var runCount = 10
 
-const inputRecordsPath = "input_1000_records.jsonl"
-const outputCSVPath = "per_run_results_option2_1000.csv"
-const outputPerRecordCSVPath = "per_record_results_option2_1000.csv"
-const explain = false
+const inputRecordsPath = "input_1_records.jsonl"
+const outputPerRunCSVPath = "per_run_results_option2_1_" + time.DateTime + ".csv"
+const outputPerRecordCSVPath = "per_record_results_option2_1_" + time.DateTime + ".csv"
+const explain = true
 
 func TestDenormalizedRefs2RepTables(t *testing.T) {
-	benchmark.RunTestForOption(t, ProcessRecordOption1Instrumented, runCount, inputRecordsPath, outputPerRecordCSVPath, outputCSVPath)
+	benchmark.RunTestForOption(t, ProcessRecordOption1Instrumented, runCount, inputRecordsPath, outputPerRecordCSVPath, outputPerRunCSVPath)
 }
 
 func ProcessRecordOption1Instrumented(tx *gorm.DB, rec benchmark.InputRecord) ([]benchmark.StepTiming, error) {

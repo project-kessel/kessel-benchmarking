@@ -106,7 +106,6 @@ type StepTiming struct {
 }
 
 func GetExplainPlan(tx *gorm.DB, sql string, vars []interface{}) string {
-	//explainSQL := "EXPLAIN (ANALYZE, BUFFERS) " + sql
 	explainSQL := "EXPLAIN " + sql
 	rows, err := tx.Raw(explainSQL, vars...).Rows()
 	if err != nil {
@@ -364,12 +363,17 @@ func DryRunAndRecordExplainPlan(
 	sql := dry.Statement.SQL.String()
 	vars := dry.Statement.Vars
 
+	explainPlan := GetExplainPlan(tx, sql, vars)
+	fmt.Println("Explain Plan")
+	fmt.Println(explainPlan)
+
 	timings = append(timings, StepTiming{
 		Label:   label,
 		SQL:     sql,
 		Vars:    vars,
-		Explain: GetExplainPlan(tx, sql, vars),
+		Explain: explainPlan,
 	})
+
 	return timings
 }
 

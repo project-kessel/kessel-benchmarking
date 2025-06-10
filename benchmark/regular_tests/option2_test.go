@@ -12,7 +12,7 @@ import (
 )
 
 func TestNormalizedRefs2RepTables(t *testing.T) {
-	benchmark.RunTestForOption(t, ProcessRecordOption2, runCount, inputRecordsPath, outputPerRecordCSVPath, outputCSVPath)
+	benchmark.RunTestForOption(t, ProcessRecordOption2, runCount, inputRecordsPath, outputPerRecordCSVPath, outputPerRunCSVPath)
 }
 
 func ProcessRecordOption2(tx *gorm.DB, rec benchmark.InputRecord) ([]benchmark.StepTiming, error) {
@@ -23,6 +23,8 @@ func ProcessRecordOption2(tx *gorm.DB, rec benchmark.InputRecord) ([]benchmark.S
 	if explain {
 		benchmark.DryRunAndRecordExplainPlan(tx, timings, func() *gorm.DB {
 			query, _ := buildSelectRefsQueryOption2(tx, rec, true)
+			var dummy []option2models.JoinedRepresentation
+			_ = query.Find(&dummy) // Force GORM to build SQL
 			return query
 		}, "select_refs_and_reps_join")
 	} else {
@@ -343,7 +345,7 @@ func buildSelectRefsQueryOption2(
 	`)
 
 	if !dryRun {
-		//fmt.Println("⏳ Executing SELECT scan...")
+		fmt.Println("⏳ Executing SELECT scan...")
 		if err := query.Scan(&results).Error; err != nil {
 			fmt.Printf("❌ Scan failed: %v\n", err)
 		}

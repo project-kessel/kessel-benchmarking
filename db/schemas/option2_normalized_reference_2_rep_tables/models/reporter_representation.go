@@ -5,11 +5,11 @@ import "github.com/google/uuid"
 type ReporterRepresentation struct {
 	ID uuid.UUID `gorm:"column:id;type:uuid;primaryKey"`
 	BaseRepresentation
-	LocalResourceID    string `gorm:"column:local_resource_id;index:unique_reporter_rep_idx,unique"`
-	ReporterType       string `gorm:"size:128;column:reporter_type;index:unique_reporter_rep_idx,unique"`
-	ResourceType       string `gorm:"size:128;column:resource_type;index:unique_reporter_rep_idx,unique"`
+	LocalResourceID    string `gorm:"column:local_resource_id;index:unique_reporter_rep_idx,unique;index:reporter_lookup_idx"`
+	ReporterType       string `gorm:"size:128;column:reporter_type;index:unique_reporter_rep_idx,unique;index:reporter_lookup_idx"`
+	ResourceType       string `gorm:"size:128;column:resource_type;index:unique_reporter_rep_idx,unique;index:reporter_lookup_idx"`
 	Version            int    `gorm:"column:version;index:unique_reporter_rep_idx,unique"`
-	ReporterInstanceID string `gorm:"size:256;column:reporter_instance_id;index:unique_reporter_rep_idx,unique"`
+	ReporterInstanceID string `gorm:"size:256;column:reporter_instance_id;index:unique_reporter_rep_idx,unique;index:reporter_lookup_idx"`
 	Generation         int    `gorm:"column:generation;index:unique_reporter_rep_idx,unique"`
 	ReporterVersion    string `gorm:"column:reporter_version"`
 	APIHref            string `gorm:"size:256;column:api_href"`
